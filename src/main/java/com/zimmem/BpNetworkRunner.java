@@ -17,10 +17,12 @@ public class BpNetworkRunner {
         BPNetwork network = NetworkBuilder.bp()
                 .addLayer(new Layer(28 * 28, null))
                 .addLayer(new Layer(16, Functions.sigmoid))
+                .addLayer(new Layer(16, Functions.sigmoid))
                 .addLayer(new Layer(10,  Functions.sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/t10k-images.idx3-ubyte"), 10, 1);
+        network.train(Mnist.loadImages("/mnist/t10k-images.idx3-ubyte"), 50, 1);
+
 
     }
 }
