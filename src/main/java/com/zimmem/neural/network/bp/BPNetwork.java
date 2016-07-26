@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.jar.Pack200;
-import java.util.stream.Collectors;
 
 /**
  * Created by zimmem on 2016/7/26.
@@ -30,14 +28,31 @@ public class BPNetwork implements Network {
             while (set.size() < batchSize){
                 set.add(random.nextInt(images.size()));
             }
-
-            List<MnistImage> imageBatch = set.stream().map(images::get).collect(Collectors.toList());
-            imageBatch.forEach((image) -> {
+            set.forEach(index->{
+                MnistImage image = images.get(index);
+                MnistLabel label = labels.get(index);
                 double[] output = classify(image);
+                double[] collect = new double[output.length];
+                collect[label.getValue()] = 1;
+
+
             });
+
         }
 
         log.info("train finish, cast {} ms", System.currentTimeMillis() - start);
+    }
+
+    private int getMaxIndex(double[] output) {
+        double max = output[0];
+        int maxIndex = 0;
+        for(int i = 1; i < output.length; i ++ ){
+            if(max < output[i]){
+                max = output[i];
+                maxIndex = i;
+            }
+        }
+        return maxIndex;
     }
 
     /**

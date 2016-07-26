@@ -3,7 +3,6 @@ package com.zimmem.neural.network.bp;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * 一层结点
@@ -26,7 +25,12 @@ public class Layer {
     /**
      * 偏移量
      */
-    private int bias;
+    private double biases[];
+
+    /**
+     * 每次训练后的偏差
+     */
+    private double errors[][];
 
     private Function<Double, Double> activationFunction;
 
@@ -37,19 +41,24 @@ public class Layer {
     public Layer(int n, Function<Double, Double> activationFunction) {
         Random random = new Random();
         weights = new double[n];
+        biases = new double[n];
         for (int i = 0 ; i < n ; i ++ ){
+            // 随机 -0.5 ~ 0.5 权重
+            // biases 都为0
+
             weights[i] = random.nextDouble() - 0.5d;
+            biases[i] = 0d;
         }
         values = new double[n];
         this.activationFunction = activationFunction;
     }
 
-    public void spread(Layer preLayer) {
+    void spread(Layer preLayer) {
 
         for(int i = 0; i < values.length; i ++ ){
             int finalI = i;
             double sum = Arrays.stream(preLayer.values).map(v -> v * weights[finalI]).sum();
-            values[i] = activationFunction.apply(sum + bias);
+            values[i] = activationFunction.apply(sum + biases[i]);
         }
 
     }

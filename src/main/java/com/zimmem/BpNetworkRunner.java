@@ -2,6 +2,7 @@ package com.zimmem;
 
 import com.zimmem.math.Functions;
 import com.zimmem.mnist.Mnist;
+import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
 import com.zimmem.neural.network.bp.BPNetwork;
 import com.zimmem.neural.network.bp.Layer;
@@ -21,7 +22,7 @@ public class BpNetworkRunner {
                 .addLayer(new Layer(10,  Functions.sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/t10k-images.idx3-ubyte"), 50, 1);
+        network.train(Mnist.loadImages("/mnist/t10k-images.idx3-ubyte"),Mnist.loadLabels("/mnist/t10k-labels.idx1-ubyte"), 50, 1);
 
 
     }
