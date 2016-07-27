@@ -3,7 +3,6 @@ package com.zimmem.neural.network.bp;
 import com.zimmem.ThreadContext;
 import com.zimmem.math.Functions;
 
-import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -23,10 +22,6 @@ public class Layer {
     double[][] weights;
 
 
-    /**
-     * 每个神经元计算后的激活值
-     */
-    double[] activations;
 
     /**
      * 偏移量
@@ -38,12 +33,6 @@ public class Layer {
      */
     //List<double[]> errors;
 
-    /**
-     * wx+b 加权输入
-     */
-    Map<Integer, double[]> weightedInputs;
-
-    Map<Integer, double[]> deltas;
 
     /**
      * 激活函数
@@ -78,36 +67,29 @@ public class Layer {
             // biases 都为0
             biases[i] = 0d;
         }
-        activations = new double[size];
-        //errors = new ArrayList<>();
-        weightedInputs = new HashMap<>();
-        deltas = new HashMap<>();
 
     }
 
 
 
-    double[] forward() {
+    double[] forward(Context context) {
 
         if (preLayer != null) {
             double[] weightedInputs = new double[size];
+            double activations[] = new double[size];
             IntStream.range(0, size).forEach(i -> {
-                double weightedInput = IntStream.range(0, preLayer.size).mapToDouble(pi -> preLayer.activations[pi] * weights[i][pi]).sum() + biases[i];
+                double weightedInput = IntStream.range(0, preLayer.size).mapToDouble(pi -> context.activations.get(preLayer)[pi] * weights[i][pi]).sum() + biases[i];
                 weightedInputs[i] = weightedInput;
                 activations[i] = activationFunction.apply(weightedInput);
             });
-            synchronized (weightedInputs){
-                Optional.ofNullable(ThreadContext.get("network.bp.train.batch.index")).ifPresent( o ->{
-                    this.weightedInputs.put((Integer) o, weightedInputs);
-                });
-
-            }
+            context.activations.put(this, activations);
+            context.weightedInputs.put(this, weightedInputs);
         }
 
         if (nextLayer != null) {
-            return nextLayer.forward();
+            return nextLayer.forward(context);
         } else {
-            return this.activations;
+            return context.activations.get(this);
         }
 
     }
@@ -117,20 +99,17 @@ public class Layer {
      *
      * @param delta
      */
-    void backPropagationDelta(double[] delta) {
-        synchronized (deltas){
-            int index = (int) ThreadContext.get("network.bp.train.batch.index");
-            this.deltas.put (index, delta);
-        }
+    void backPropagationDelta(Context context, double[] delta) {
+        context.deltas.put(this, delta);
 
         if (preLayer != null) {
             double[] preDelta = new double[preLayer.size];
-            IntStream.range(0, preDelta.length).forEach(i -> {
+            IntStream.range(0, preLayer.size).forEach(i -> {
                 IntStream.range(0, size).forEach(j -> {
-                    preDelta[i] += weights[j][i] * Functions.SigmoidDerivative.apply(activations[j]);
+                    preDelta[i] += weights[j][i] * delta[j] * Functions.SigmoidDerivative.apply(context.activations.get(this)[j]);
                 });
             });
-            preLayer.backPropagationDelta(preDelta);
+            preLayer.backPropagationDelta(context, preDelta);
         }
     }
 
@@ -138,31 +117,26 @@ public class Layer {
      *
      * @param p 训练速度
      */
-    void backPropagationUpdate(double p) {
+    void backPropagationUpdate(double p, List<Context> contexts) {
 
         if(preLayer == null ){
             return ;
         }
 
-        // 更新权重
+
         // 更新 biases
         IntStream.range(0, size).forEach(i -> {
-            biases[i] -= deltas.entrySet().stream().mapToDouble( a -> a.getValue()[i]).sum()* p / deltas.size();
+            //biases[i] -= deltas.entrySet().stream().mapToDouble( a -> a.getValue()[i]).sum()* p / deltas.size();
+            biases[i] -= contexts.stream().mapToDouble(context -> context.deltas.get(this)[i]).sum() * p / contexts.size();
         });
 
+        // 更新权重
         // i -> 当前层第i个神经元， j -》 上一层第j 个神经元
-        IntStream.range(0, size).forEach(i ->{
-            IntStream.range(0, preLayer.size).forEach(j ->{
-                weights[i][j] -=  deltas.entrySet().stream().mapToDouble(entry -> entry.getValue()[i] * preLayer.activations[j]).sum();
-            });
-        });
+        IntStream.range(0, size).forEach(i -> IntStream.range(0, preLayer.size).forEach(j ->{
+            weights[i][j] -=  contexts.stream().mapToDouble(context -> context.deltas.get(this)[i] * context.activations.get(preLayer)[j]).sum() ;//* p;
+        }));
 
-        preLayer.backPropagationUpdate(p);
+        preLayer.backPropagationUpdate(p, contexts);
     }
 
-    public void cleanTrain() {
-        //errors.clear();
-        weightedInputs.clear();
-        deltas.clear();
-    }
 }

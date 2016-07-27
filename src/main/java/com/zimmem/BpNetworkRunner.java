@@ -6,6 +6,7 @@ import com.zimmem.mnist.MnistImage;
 import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
 import com.zimmem.neural.network.bp.BPNetwork;
+import com.zimmem.neural.network.bp.Context;
 import com.zimmem.neural.network.bp.Layer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,8 @@ public class BpNetworkRunner {
             current++;
             if (current % 100 == 0) {
                 log.info("testing mnist : {}/{} - {}", collect, current, (double) collect / current);
-                double[] output = network.forward(testImages.get(i));
+                Context context = new Context();
+                double[] output = network.forward(testImages.get(i), context);
                 if (Objects.equals(Arrays.stream(output).max().getAsDouble(), output[testLabels.get(i).getValue()]) && !Double.isNaN(output[testLabels.get(i).getValue()])) {
                     collect++;
                 }
