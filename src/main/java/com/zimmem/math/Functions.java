@@ -7,5 +7,16 @@ import java.util.function.Function;
  */
 public class Functions {
 
-    public static Function<Double, Double> sigmoid = d -> 1 / (1 + Math.pow(Math.E, -d));
+    /**
+     * S型函数
+     */
+    public static Function<Double, Double> Sigmoid = x -> 1 / (1 + Math.pow(Math.E, -x));
+
+
+    /**
+     * S 型函数的导函数
+     */
+    public static Function<Double, Double> SigmoidDerivative = x ->  Functions.Sigmoid.apply(x) * ( 1 - Functions.Sigmoid.apply(x));
+
+
 }

@@ -2,26 +2,36 @@ package com.zimmem.neural.network.bp;
 
 import com.zimmem.neural.network.NetworkBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 /**
  * Created by zimmem on 2016/7/26.
  */
-public class BPNetWorkBuilder  extends NetworkBuilder<BPNetwork>{
+public class BPNetWorkBuilder extends NetworkBuilder<BPNetwork> {
 
-    private List<Layer> layers;
+    Layer inputLayer;
 
-    public BPNetWorkBuilder addLayer(Layer layer){
-        layers = Optional.ofNullable(layers).orElse(new ArrayList<>());
-        layers.add(layer);
+    Layer outputLayer;
+
+    public BPNetWorkBuilder addLayer(Layer layer) {
+        if (inputLayer == null) {
+            inputLayer = layer;
+            outputLayer = layer;
+        } else {
+            outputLayer.nextLayer = layer;
+            layer.preLayer = outputLayer;
+            outputLayer = layer;
+        }
         return this;
     }
 
     public BPNetwork build() {
         BPNetwork network = new BPNetwork();
-        network.layers = this.layers;
+        network.inputLayer = inputLayer;
+        network.outputLayer = outputLayer;
+        Layer current = inputLayer;
+        while(current != null ){
+            current.init();
+            current = current.nextLayer;
+        }
         return network;
     }
 }
