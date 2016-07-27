@@ -2,7 +2,6 @@ package com.zimmem.neural.network.bp;
 
 import com.zimmem.math.Functions;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -118,20 +117,19 @@ public class Layer {
             double[] preDelta = new double[preLayer.size];
             IntStream.range(0, preDelta.length).forEach(i -> {
                 IntStream.range(0, size).forEach(j -> {
-                    preDelta[i] += weights[j][i] * Functions.SigmoidDerivative.apply(activations[j]);
+                    preDelta[i] += weights[j][i] * delta[j]* Functions.SigmoidDerivative.apply(activations[j]);
                 });
             });
             preLayer.backPropagationDelta(preDelta);
         }
     }
 
-    void backPropagationUpdate() {
+    void backPropagationUpdate(double p) {
 
         if(preLayer == null ){
             return ;
         }
 
-        double p = .8;
         // 更新权重
         // 更新 biases
         IntStream.range(0, biases.length).forEach(i -> {
@@ -140,11 +138,11 @@ public class Layer {
 
         IntStream.range(0, weights.length).forEach(i ->{
             IntStream.range(0, preLayer.size).forEach(j ->{
-                weights[i][j] -=  deltas.stream().mapToDouble(a -> a[i] * preLayer.activations[j]).sum();
+                weights[i][j] -=  deltas.stream().mapToDouble(a -> a[i] * preLayer.activations[j]).sum() * p;
             });
         });
 
-        preLayer.backPropagationUpdate();
+        preLayer.backPropagationUpdate(p);
     }
 
     public void cleanTrain() {

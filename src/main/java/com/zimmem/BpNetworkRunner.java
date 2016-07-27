@@ -47,6 +47,7 @@ public class BpNetworkRunner {
                 }
             }
         }
+        log.info("test finish {}/{} = {}", collect, testImages.size(), (double)collect/testImages.size());
 
 
     }

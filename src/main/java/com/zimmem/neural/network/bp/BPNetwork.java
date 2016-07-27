@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 /**
@@ -30,7 +31,13 @@ public class BPNetwork implements Network {
 
             int correct = 0;
             int batchCorrect;
+            double verifyRate = 0d;
             for (int batch = 0; batch < images.size(); batch += batchSize) {
+
+                if (batch % 1000 == 0) {
+                    // 每训练1000个数据， 拿最后1000个数据做下验证
+                    verifyRate = verify(images.subList(images.size() - 1000, images.size()), labels.subList(labels.size() - 1000, labels.size()));
+                }
 
                 batchCorrect = 0;
                 int batchNum = 0;
@@ -61,7 +68,7 @@ public class BPNetwork implements Network {
                 correct += batchCorrect;
                 log.debug("batch {} : {}/{} - total {}/{} = {} ", batch / batchSize + 1, batchCorrect, batchNum, correct, batch + batchSize, (double) correct / (batch + batchSize));
 
-                outputLayer.backPropagationUpdate();
+                outputLayer.backPropagationUpdate((1-verifyRate)/2);
                 resetTrainData();
 
 //                Layer current = inputLayer.nextLayer;
@@ -77,6 +84,22 @@ public class BPNetwork implements Network {
         }
 
         log.info("train finish, cast {} ms", System.currentTimeMillis() - start);
+    }
+
+    private double verify(List<MnistImage> mnistImages, List<MnistLabel> mnistLabels) {
+        AtomicInteger collect = new AtomicInteger(0);
+
+        IntStream.range(0, mnistImages.size()).forEach(i ->{
+            double[] output = forward(mnistImages.get(i));
+            double max = Arrays.stream(output).max().getAsDouble();
+            if (Objects.equals(max, output[mnistLabels.get(i).getValue()]) && !Double.isNaN(max)) {
+                collect.incrementAndGet();
+            }
+        });
+
+        double rate = collect.doubleValue() / mnistImages.size();
+        log.info("valified {}/{} = {}", collect, mnistImages.size(), rate);
+        return rate;
     }
 
     private void resetTrainData() {
