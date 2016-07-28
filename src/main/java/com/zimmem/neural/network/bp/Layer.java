@@ -70,7 +70,7 @@ public class Layer implements Serializable{
             weights = new double[size][preLayer.size];
             for (int i = 0; i < size; i++) {
                 for (int j = 0; j < preLayer.size; j++) {
-                    weights[i][j] = random.nextDouble() * 0.05;
+                    weights[i][j] = ( random.nextDouble() - .5) * 0.1;
                 }
             }
         }
@@ -117,13 +117,18 @@ public class Layer implements Serializable{
             double[] preDelta = new double[preLayer.size];
             IntStream.range(0, preDelta.length).forEach(i -> {
                 IntStream.range(0, size).forEach(j -> {
-                    preDelta[i] += weights[j][i] * delta[j] * Functions.SigmoidDerivative.apply(context.weightedInputs.get(preLayer)[i]);
+                    preDelta[i] = weights[j][i] * delta[j] * Functions.SigmoidDerivative.apply(context.weightedInputs.get(preLayer)[i]);
                 });
             });
             preLayer.backPropagationDelta(context, preDelta);
         }
     }
 
+    /**
+     *
+     * @param contexts
+     * @param eta 学习速率
+     */
     void backPropagationUpdate(List<TrainContext> contexts, double eta) {
 
         if (preLayer == null ) {

@@ -1,5 +1,7 @@
 package com.zimmem.mnist;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -65,10 +67,22 @@ public class Mnist {
 
     public static void main(String[] args) throws URISyntaxException, IOException {
         List<MnistLabel> labels = loadLabels("/mnist/t10k-labels.idx1-ubyte");
-        System.out.println(labels.size());
+        //System.out.println(labels.size());
 
         List<MnistImage> images = loadImages("/mnist/t10k-images.idx3-ubyte");
-        System.out.println(labels.size());
-        images.forEach(i -> System.out.println(Arrays.toString(i.getValues())));
+//        System.out.println(labels.size());
+//        images.forEach(i -> System.out.println(Arrays.toString(i.getValues())));
+
+        for(int i = 0 ; i < images.size() ;i ++ ){
+            BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_BYTE_GRAY);
+            for(int c = 0 ; c < 28 ; c++){
+                for (int r = 0 ; r < 28 ; r++){
+                    image.setRGB(r, c , images.get(i).getValues()[28 * c + r ]);
+                }
+            }
+            new File("D:\\code\\mnist-picture\\test\\").mkdirs();
+            ImageIO.write(image, "jpg", new File("D:\\code\\mnist-picture\\test\\" +  i + "_"+ labels.get(i).getValue()+".jpg"));
+        }
+
     }
 }

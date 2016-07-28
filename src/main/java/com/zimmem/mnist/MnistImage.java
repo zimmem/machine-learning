@@ -7,7 +7,7 @@ public class MnistImage {
 
     private byte[] values;
 
-    private int index;
+    private int label;
 
     public MnistImage(byte[] values) {
         this.values = values;
@@ -21,11 +21,11 @@ public class MnistImage {
         this.values = values;
     }
 
-    public int getIndex() {
-        return index;
+    public int getLabel() {
+        return label;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setLabel(int label) {
+        this.label = label;
     }
 }

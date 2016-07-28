@@ -17,6 +17,10 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by zimmem on 2016/7/26.
@@ -25,40 +29,48 @@ public class BpNetworkRunner {
 
     private static Logger log = LoggerFactory.getLogger(BpNetworkRunner.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         BPNetwork network = NetworkBuilder.bp()
                 .addLayer(new Layer(28 * 28, null))
-                .addLayer(new Layer(50, Functions.Sigmoid))
-                //.addLayer(new Layer(30, Functions.Sigmoid))
+                .addLayer(new Layer(800, Functions.Sigmoid))
+                //.addLayer(new Layer(50, Functions.Sigmoid))
                 .addLayer(new Layer(10, Functions.Sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 1);
+        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 10, 10);
 
 //        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("model." + System.currentTimeMillis()));
 //        oos.writeObject(network);
 //        oos.close();
 
 
-
         // test
         List<MnistImage> testImages = Mnist.loadImages("/mnist/t10k-images.idx3-ubyte");
         List<MnistLabel> testLabels = Mnist.loadLabels("/mnist/t10k-labels.idx1-ubyte");
-        int collect = 0;
-        int current = 0;
-        for (int i = 0; i < testImages.size(); i++) {
-            current++;
-            if (current % 100 == 0) {
-                log.info("testing mnist : {}/{} - {}", collect, current, (double) collect / current);
-                double[] output = network.forward(new TrainContext(), testImages.get(i));
-                double max = Arrays.stream(output).max().getAsDouble();
-                if (Objects.equals(max, output[testLabels.get(i).getValue()]) && !Double.isNaN(max)) {
-                    collect++;
-                }
-            }
-        }
-        log.info("test finish {}/{} = {}", collect, testImages.size(), (double)collect/testImages.size());
 
+        AtomicInteger collect = new AtomicInteger(0);
+        AtomicInteger tested = new AtomicInteger(0);
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        CountDownLatch latch = new CountDownLatch(testImages.size());
+        for (int i = 0; i < testImages.size(); i++) {
+            MnistLabel label = testLabels.get(i);
+            MnistImage image = testImages.get(i);
+            executor.execute(() -> {
+                double[] output = network.forward(new TrainContext(), image);
+                double max = Arrays.stream(output).max().getAsDouble();
+                if (!Double.isNaN(output[label.getValue()]) && Objects.equals(max, output[label.getValue()])) {
+                    collect.incrementAndGet();
+                }
+                tested.incrementAndGet();
+                if (tested.get() % 100 == 0) {
+                    log.info("testing mnist : {}/{} - {}", collect, tested, (double) collect.doubleValue() / tested.doubleValue());
+                }
+                latch.countDown();
+            });
+        }
+        latch.await();
+        log.info("test finish {}/{} = {}", collect, testImages.size(), (double) collect.get() / testImages.size());
+        executor.shutdown();
 
     }
 }
