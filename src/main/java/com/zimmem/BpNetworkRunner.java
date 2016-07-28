@@ -7,10 +7,13 @@ import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
 import com.zimmem.neural.network.bp.BPNetwork;
 import com.zimmem.neural.network.bp.Layer;
+import com.zimmem.neural.network.bp.TrainContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +35,12 @@ public class BpNetworkRunner {
 
         network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 1);
 
+//        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("model." + System.currentTimeMillis()));
+//        oos.writeObject(network);
+//        oos.close();
+
+
+
         // test
         List<MnistImage> testImages = Mnist.loadImages("/mnist/t10k-images.idx3-ubyte");
         List<MnistLabel> testLabels = Mnist.loadLabels("/mnist/t10k-labels.idx1-ubyte");
@@ -41,8 +50,9 @@ public class BpNetworkRunner {
             current++;
             if (current % 100 == 0) {
                 log.info("testing mnist : {}/{} - {}", collect, current, (double) collect / current);
-                double[] output = network.forward(testImages.get(i));
-                if (Objects.equals(Arrays.stream(output).max().getAsDouble(), output[testLabels.get(i).getValue()]) && !Double.isNaN(output[testLabels.get(i).getValue()])) {
+                double[] output = network.forward(new TrainContext(), testImages.get(i));
+                double max = Arrays.stream(output).max().getAsDouble();
+                if (Objects.equals(max, output[testLabels.get(i).getValue()]) && !Double.isNaN(max)) {
                     collect++;
                 }
             }
