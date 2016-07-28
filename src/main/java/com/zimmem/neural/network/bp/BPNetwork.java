@@ -6,6 +6,10 @@ import com.zimmem.neural.network.Network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -32,11 +36,11 @@ public class BPNetwork implements Network, Serializable {
         long start = System.currentTimeMillis();
         log.info("begin to train at {}", start);
 
-        for(int i = 0 ; i < images.size(); i++ ){
+        for (int i = 0; i < images.size(); i++) {
             images.get(i).setLabel(labels.get(i).getValue());
         }
 
-        while (repeat-- > 0) {
+        for(int epoch = 1; epoch <= repeat; epoch++ ){
             //重复 repeat 次
 
             Collections.shuffle(images);
@@ -91,12 +95,13 @@ public class BPNetwork implements Network, Serializable {
                 correct += batchCorrect.get();
                 log.debug("batch {} : {}/{} - total {}/{} = {} ", batch / batchSize + 1, batchCorrect, batchSize, correct, batch + batchSize, (double) correct / (batch + batchSize));
 
-                outputLayer.backPropagationUpdate(contexts, (1 - verifyRate) * .5 );
+                outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 3));
                 //resetTrainData();
 
 
             }
-            log.info("repeat {}:  {} / {} ", repeat, correct, images.size());
+            present(epoch);
+            log.info("epoch {}:  {} / {} ", epoch, correct, images.size());
 
         }
 
@@ -139,10 +144,53 @@ public class BPNetwork implements Network, Serializable {
 
         double[] input = new double[image.getValues().length];
         for (int i = 0; i < image.getValues().length; i++) {
-            input[i] = (double) (0xff & image.getValues()[i]);
+            input[i] = (double) (0xff & image.getValues()[i]) > 100 ? 1d : 0d;
         }
         context.activations.put(inputLayer, input);
         return inputLayer.forward(context);
+
+    }
+
+    void present(int epoch) {
+
+        double[][] imgs = new double[outputLayer.size][];
+        IntStream.range(0, outputLayer.size).forEach(oi -> {
+            Layer current = outputLayer.preLayer;
+            Layer next = outputLayer;
+            double[] next_ws = new double[outputLayer.size];
+            next_ws[oi] = 1d;
+            while (current != null) {
+                double[] ws = new double[current.size];
+                for (int ci = 0; ci < current.size; ci++) {
+                    for (int ni = 0; ni < next.size; ni++) {
+                        ws[ci] += next_ws[ni] * next.weights[ni][ci];
+                    }
+                }
+                next = current;
+                current = current.preLayer;
+                next_ws = ws;
+
+            }
+            imgs[oi] = next_ws;
+        });
+
+        long timestamp = System.currentTimeMillis();
+        for(int i = 0 ; i < imgs.length ; i ++ ){
+            BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_3BYTE_BGR);
+            double max = Arrays.stream(imgs[i]).map(Math::abs).max().getAsDouble();
+            for(int c = 0 ; c < 28 ; c++){
+                for (int r = 0 ; r < 28 ; r++){
+                    double weight = imgs[i][28 * c + r];
+                    int bgr  = weight > 0 ? (int) (255 * weight / max) << 16 : (int) (- 255 * weight / max)  ;
+                    image.setRGB(r, c , bgr );
+                }
+            }
+            try {
+                ImageIO.write(image,"jpg", new File("present\\" +  timestamp + "_" + epoch + "_" + i + ".jpg"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
