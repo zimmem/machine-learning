@@ -95,7 +95,8 @@ public class BPNetwork implements Network, Serializable {
                 correct += batchCorrect.get();
                 log.debug("batch {} : {}/{} - total {}/{} = {} ", batch / batchSize + 1, batchCorrect, batchSize, correct, batch + batchSize, (double) correct / (batch + batchSize));
 
-                outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 3));
+                //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 3));
+                outputLayer.backPropagationUpdate(contexts,0.1);
                 //resetTrainData();
 
 

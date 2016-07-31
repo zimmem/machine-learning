@@ -15,4 +15,9 @@ public class CnnContext {
 
     Map<CnnLayer, List<Matrix>> weightedInputs = new HashMap<>();
 
+    /**
+     * 每个 filter 一个delta
+     */
+    Map<CnnLayer, List<Matrix>> deltas = new HashMap<>();
+
 }

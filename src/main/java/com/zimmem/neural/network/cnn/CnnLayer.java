@@ -20,7 +20,6 @@ public abstract class CnnLayer {
     int outputColumn;
 
 
-
     List<Matrix> forward(CnnContext context) {
 
         propagation(context);
@@ -34,18 +33,37 @@ public abstract class CnnLayer {
     void init() {
     }
 
+    void backPropagationDelta(CnnContext context){
+
+        if(nextLayer != null ){
+            // 最后一层不用计算 ， 由 network 计算
+            recordDelta(context);
+        }
+        if(preLayer != null ){
+            preLayer.backPropagationDelta(context);
+        }
+    }
+
+
+    /**
+     *
+     * @param contexts
+     * @param eta 学习速率
+     */
     void backPropagationUpdate(List<CnnContext> contexts, double eta) {
 
         updateWeightsAndBias(contexts, eta);
 
+        // 第一层不用更新
         if (preLayer != null) {
             preLayer.backPropagationUpdate(contexts, eta);
         }
 
     }
 
-
     protected abstract void propagation(CnnContext context);
 
-    protected  abstract void updateWeightsAndBias(List<CnnContext> contexts, double eta) ;
+    protected abstract void recordDelta(CnnContext context);
+
+    protected abstract void updateWeightsAndBias(List<CnnContext> contexts, double eta);
 }

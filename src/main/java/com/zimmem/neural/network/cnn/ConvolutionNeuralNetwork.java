@@ -60,12 +60,13 @@ public class ConvolutionNeuralNetwork implements Network {
                         synchronized (contexts) {
                             contexts.add(context);
                         }
-                        Matrix output = forward(context, image).get(0);
+                        List<Matrix> output = forward(context, image);
+                        double max = output.stream().mapToDouble(m -> m.getValue(0, 0)).max().getAsDouble();
 
-//                        if (!Double.isNaN(output[image.getLabel()]) && Objects.equals(Arrays.stream(output).max().getAsDouble(), output[image.getLabel()])) {
-//                            //System.out.println(Arrays.toString(output));
-//                            batchCorrect.getAndIncrement();
-//                        }
+                        if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0 ))) {
+                            //System.out.println(Arrays.toString(output));
+                            batchCorrect.getAndIncrement();
+                        }
 //
 //                        // 输出与期望的偏差
 //                        double[] expect = new double[output.length];

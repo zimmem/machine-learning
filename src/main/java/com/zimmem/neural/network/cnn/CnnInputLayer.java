@@ -19,6 +19,12 @@ public class CnnInputLayer extends  CnnLayer {
     }
 
     @Override
+    protected void recordDelta(CnnContext context) {
+        // donothing
+
+    }
+
+    @Override
     protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
 
     }

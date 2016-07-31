@@ -4,6 +4,9 @@ import com.zimmem.math.Matrix;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by Zimmem on 2016/7/30.
@@ -16,15 +19,16 @@ public class CnnConvolutionLayer extends CnnLayer {
      * @param kernelColumn 过滤器高
      * @param count        生成几个结果
      */
-    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int count) {
-        this(kernelRow, kernelColumn, 0, 1, count);
+    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int count, Function<Double, Double> activationFunction) {
+        this(kernelRow, kernelColumn, 0, 1, count, activationFunction);
     }
 
-    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count) {
+    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count, Function<Double, Double> activationFunction) {
         this.kernelRow = kernelRow;
         this.kernelColumn = kernelColumn;
         this.pad = pad;
         this.step = step;
+        this.activationFunction = activationFunction;
         this.outputCount = count;
     }
 
@@ -33,6 +37,8 @@ public class CnnConvolutionLayer extends CnnLayer {
     List<ConvFilter> filters;
     int pad;
     int step;
+
+    private Function<Double, Double> activationFunction;
 
 
     public void init() {
@@ -57,9 +63,26 @@ public class CnnConvolutionLayer extends CnnLayer {
 
     }
 
+
+    @Override
+    protected void recordDelta(CnnContext context) {
+
+        if (nextLayer instanceof CnnPoolingLayer) {
+
+        } else {
+            throw new RuntimeException("not yet implemented.");
+        }
+
+
+    }
+
     @Override
     protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
-
+        IntStream.range(0, filters.size()).forEach(fi -> {
+            ConvFilter filter = filters.get(fi);
+            List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(this).get(fi)).collect(Collectors.toList());
+            filter.update(deltas);
+        });
     }
 
 
@@ -106,10 +129,15 @@ public class CnnConvolutionLayer extends CnnLayer {
 
             }
 
-            result.processUnits(d -> d + bias);
+            result.processUnits(d -> activationFunction.apply(d + bias));
             return result;
         }
 
 
+        public void update(List<Matrix> deltas) {
+
+
+
+        }
     }
 }

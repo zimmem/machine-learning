@@ -1,5 +1,6 @@
 package com.zimmem;
 
+import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 import com.zimmem.mnist.Mnist;
 import com.zimmem.mnist.MnistImage;
@@ -28,11 +29,11 @@ public class CnnRunner {
                     return Arrays.asList(m);
                 })
                 .addLayer(new CnnInputLayer(28, 28))
-                .addLayer(new CnnConvolutionLayer(5, 5, 6))
+                .addLayer(new CnnConvolutionLayer(5, 5, 6, Functions.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
-                .addLayer(new CnnConvolutionLayer(5, 5, 16))
+                .addLayer(new CnnConvolutionLayer(5, 5, 16, Functions.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
-                .addLayer(new CnnConvolutionLayer(4, 4, 120))
+                .addLayer(new CnnConvolutionLayer(4, 4, 10, Functions.Sigmoid))
                 .build();
 
         //network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0, 1), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 20, 10);

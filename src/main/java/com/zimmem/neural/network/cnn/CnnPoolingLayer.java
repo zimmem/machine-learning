@@ -51,6 +51,18 @@ public class CnnPoolingLayer extends CnnLayer {
     }
 
     @Override
+    protected void recordDelta(CnnContext context) {
+
+        if(nextLayer instanceof  CnnConvolutionLayer){
+            throw new RuntimeException("not yet implemented.");
+        }else{
+            throw new RuntimeException("not yet implemented.");
+        }
+
+
+    }
+
+    @Override
     protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
 
     }
