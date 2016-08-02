@@ -51,14 +51,21 @@ public class CnnPoolingLayer extends CnnLayer {
     }
 
     @Override
-    protected void recordDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnContext context) {
 
-        if(nextLayer instanceof  CnnConvolutionLayer){
-            throw new RuntimeException("not yet implemented.");
-        }else{
-            throw new RuntimeException("not yet implemented.");
+        List<Matrix> deltas = context.deltas.get(this);
+        List<Matrix> preDeltas = new ArrayList<>(preLayer.outputCount);
+        // pool 层输出与输入数是一致的， 传播没有交叉， 所以直接把当前层的残卷扩展到上一次特征图大小
+        for (int i = 0; i < preLayer.outputCount; i++) {
+            Matrix delta = Matrix.zeros(preLayer.outputRow, preLayer.outputColumn);
+            for (int r = 0; r < preLayer.outputRow; r++) {
+                for (int c = 0; c < preLayer.outputColumn; c++) {
+                    delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn));
+                }
+            }
+            preDeltas.add(delta);
         }
-
+        return preDeltas;
 
     }
 
@@ -78,8 +85,8 @@ public class CnnPoolingLayer extends CnnLayer {
             for (int r = 0; r < source.getRow() / filterRow; r++) {
                 for (int c = 0; c < source.getColumn() / filterColumn; c++) {
                     double[][] sub = new double[filterRow][filterColumn];
-                    for (int tr = 0; tr <  filterRow; tr++) {
-                        for (int tc = 0; tc <  filterColumn; tc++) {
+                    for (int tr = 0; tr < filterRow; tr++) {
+                        for (int tc = 0; tc < filterColumn; tc++) {
                             sub[tr][tc] = source.getValue(tr + r * filterRow, tc + c * filterColumn);
                         }
                     }
@@ -102,7 +109,7 @@ public class CnnPoolingLayer extends CnnLayer {
             return max;
         };
 
-        public Function<Matrix, Double> Min = m -> {
+        static public Function<Matrix, Double> Min = m -> {
             double min = m.getValue(0, 0);
             for (int r = 0; r < m.getRow(); r++) {
                 for (int c = 0; c < m.getColumn(); c++) {
@@ -112,7 +119,7 @@ public class CnnPoolingLayer extends CnnLayer {
             return min;
         };
 
-        public Function<Matrix, Double> Sum = m -> {
+        static public Function<Matrix, Double> Sum = m -> {
             double sum = 0;
             for (int r = 0; r < m.getRow(); r++) {
                 for (int c = 0; c < m.getColumn(); c++) {
@@ -122,7 +129,7 @@ public class CnnPoolingLayer extends CnnLayer {
             return sum;
         };
 
-        public Function<Matrix, Double> Means = m -> Sum.apply(m) / (m.getColumn() * m.getRow());
+        static public Function<Matrix, Double> Means = m -> Sum.apply(m) / (m.getColumn() * m.getRow());
 
     }
 

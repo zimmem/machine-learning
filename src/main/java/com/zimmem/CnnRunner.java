@@ -30,19 +30,17 @@ public class CnnRunner {
                 })
                 .addLayer(new CnnInputLayer(28, 28))
                 .addLayer(new CnnConvolutionLayer(5, 5, 6, Functions.Sigmoid))
-                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
                 .addLayer(new CnnConvolutionLayer(5, 5, 16, Functions.Sigmoid))
-                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
                 .addLayer(new CnnConvolutionLayer(4, 4, 10, Functions.Sigmoid))
                 .build();
 
-        //network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0, 1), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 20, 10);
+        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0, 1), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 20, 10);
 
         List<Matrix> result = network.forward(new CnnContext(), Mnist.loadImages("/mnist/train-images.idx3-ubyte").get(0));
         System.out.println(result.size());
-        result.stream().forEach( m ->{
-            System.out.println(m );
-        });
+        result.stream().forEach(System.out::println);
 
     }
 

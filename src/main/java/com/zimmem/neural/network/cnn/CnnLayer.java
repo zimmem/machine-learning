@@ -35,11 +35,9 @@ public abstract class CnnLayer {
 
     void backPropagationDelta(CnnContext context){
 
-        if(nextLayer != null ){
-            // 最后一层不用计算 ， 由 network 计算
-            recordDelta(context);
-        }
-        if(preLayer != null ){
+        //第一层不用计算残差
+        if(preLayer != null && preLayer.preLayer != null){
+            context.deltas.put(preLayer,  calculatePreDelta(context));
             preLayer.backPropagationDelta(context);
         }
     }
@@ -63,7 +61,11 @@ public abstract class CnnLayer {
 
     protected abstract void propagation(CnnContext context);
 
-    protected abstract void recordDelta(CnnContext context);
+    /**
+     * 计算上层残差
+     * @param context
+     */
+    protected abstract List<Matrix> calculatePreDelta(CnnContext context);
 
     protected abstract void updateWeightsAndBias(List<CnnContext> contexts, double eta);
 }

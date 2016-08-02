@@ -1,5 +1,6 @@
 package com.zimmem.neural.network.cnn;
 
+import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 
 import java.util.ArrayList;
@@ -56,23 +57,35 @@ public class CnnConvolutionLayer extends CnnLayer {
     protected void propagation(CnnContext context) {
 
         List<Matrix> features = new ArrayList<>(outputCount);
+        List<Matrix> weightedInputs = new ArrayList<>(outputCount);
         for (int i = 0; i < outputCount; i++) {
-            features.add(filters.get(i).conv(context.features.get(preLayer)));
+            Matrix weighted = filters.get(i).filter(context.features.get(preLayer));
+            weightedInputs.add(weighted);
+            features.add(weighted.processUnits(d -> activationFunction.apply(d)));
         }
+        context.weightedInputs.put(this, weightedInputs);
         context.features.put(this, features);
 
     }
 
 
     @Override
-    protected void recordDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnContext context) {
 
-        if (nextLayer instanceof CnnPoolingLayer) {
 
-        } else {
-            throw new RuntimeException("not yet implemented.");
+        List<Matrix> deltas = context.deltas.get(this);
+        List<Matrix> preDeltas = new ArrayList<>(preLayer.outputCount);
+        for (int i = 0; i < preLayer.outputCount; i++) {
+            preDeltas.add(Matrix.zeros(preLayer.outputRow, preLayer.outputColumn));
+        }
+        for (int i = 0; i < outputCount; i++) {
+            List<Matrix> featureDelta = filters.get(i).calculateDeltas(context.deltas.get(this).get(i));
+            for (int j = 0; j < preLayer.outputCount; j++) {
+                preDeltas.set(j, preDeltas.get(j).plus(featureDelta.get(j)));
+            }
         }
 
+        return preDeltas;
 
     }
 
@@ -81,7 +94,7 @@ public class CnnConvolutionLayer extends CnnLayer {
         IntStream.range(0, filters.size()).forEach(fi -> {
             ConvFilter filter = filters.get(fi);
             List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(this).get(fi)).collect(Collectors.toList());
-            filter.update(deltas);
+            filter.update();
         });
     }
 
@@ -99,44 +112,31 @@ public class CnnConvolutionLayer extends CnnLayer {
             }
         }
 
-        Matrix conv(List<Matrix> sources) {
+        Matrix filter(List<Matrix> sources) {
 
-            Matrix result = new Matrix(outputRow, outputColumn);
-            for (int i = 0; i < sources.size(); i++) {
-                Matrix source = sources.get(i);
-                Matrix kernel = kernels.get(i);
+            Matrix result = sources.get(0).conv(kernels.get(0), 0, 1);
 
-                for (int stepRow = 0 - pad; stepRow <= source.getRow() + pad - kernel.getRow(); stepRow += step) {
-
-                    for (int stepColumn = 0 - pad; stepColumn <= source.getColumn() + pad - kernel.getColumn(); stepColumn += step) {
-
-                        int resultRow = (stepRow + pad) / step;
-                        int resultColumn = (stepColumn + pad) / step;
-                        double tempResult = 0;
-                        for (int kernelRow = 0; kernelRow < kernel.getRow(); kernelRow++) {
-                            for (int kernelColumn = 0; kernelColumn < kernel.getColumn(); kernelColumn++) {
-                                int sourceRow = stepRow + kernelRow;
-                                int sourceColumn = stepColumn + kernelColumn;
-                                double sourceValue = sourceRow < 0 || sourceColumn < 0 || sourceRow >= source.getRow() || sourceColumn >= source.getColumn() ? 0 : source.getValue(sourceRow, sourceColumn);
-                                tempResult += sourceValue * kernel.getValue(kernelRow, kernelColumn);
-                            }
-                        }
-                        result.setValue(resultRow, resultColumn, result.getValue(resultRow, resultColumn) + tempResult);
-
-                    }
-
-                }
-
+            for (int i = 1; i < sources.size(); i++) {
+                result = result.plus(sources.get(i).conv(kernels.get(i), 0, 1));
             }
 
-            result.processUnits(d -> activationFunction.apply(d + bias));
             return result;
         }
 
 
-        public void update(List<Matrix> deltas) {
+        List<Matrix> calculateDeltas(Matrix delta) {
 
+            List<Matrix> preDeltas = new ArrayList<>(preLayer.outputCount);
+            for (int i = 0; i < preLayer.outputCount; i++) {
+                // 暂不考虑 正向 conv 时 step > 1 的情况
+                // 为什么转180度？
+                preDeltas.add(delta.conv(kernels.get(i).rotate180(), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
+            }
+            return preDeltas;
 
+        }
+
+        void update() {
 
         }
     }

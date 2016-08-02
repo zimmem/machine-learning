@@ -1,5 +1,7 @@
 package com.zimmem.neural.network.cnn;
 
+import com.zimmem.math.Matrix;
+
 import java.util.List;
 
 /**
@@ -19,9 +21,10 @@ public class CnnInputLayer extends  CnnLayer {
     }
 
     @Override
-    protected void recordDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnContext context) {
         // donothing
 
+        return null;
     }
 
     @Override

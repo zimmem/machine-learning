@@ -1,5 +1,6 @@
 package com.zimmem.neural.network.cnn;
 
+import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 import com.zimmem.mnist.MnistImage;
 import com.zimmem.mnist.MnistLabel;
@@ -63,10 +64,22 @@ public class ConvolutionNeuralNetwork implements Network {
                         List<Matrix> output = forward(context, image);
                         double max = output.stream().mapToDouble(m -> m.getValue(0, 0)).max().getAsDouble();
 
-                        if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0 ))) {
+                        if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0))) {
                             //System.out.println(Arrays.toString(output));
                             batchCorrect.getAndIncrement();
                         }
+
+                        List<Matrix> outputDeltas = new ArrayList<Matrix>(outputLayer.outputCount);
+                        for (int i = 0; i < outputLayer.outputCount; i++) {
+                            // 输出层残差， 目前只支持激活函数为Sigmoid的情况
+                            double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * Functions.SigmoidDerivative.apply(context.weightedInputs.get(outputLayer).get(i).getValue(0, 0));
+                            outputDeltas.add(Matrix.zeros(1, 1).setValue(0, 0, delta));
+                        }
+                        context.deltas.put(outputLayer, outputDeltas);
+                        outputLayer.backPropagationDelta(context);
+                        System.out.println(context.deltas.get(inputLayer.nextLayer));
+
+
 //
 //                        // 输出与期望的偏差
 //                        double[] expect = new double[output.length];
