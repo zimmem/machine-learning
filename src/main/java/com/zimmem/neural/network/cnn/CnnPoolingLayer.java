@@ -60,7 +60,7 @@ public class CnnPoolingLayer extends CnnLayer {
             Matrix delta = Matrix.zeros(preLayer.outputRow, preLayer.outputColumn);
             for (int r = 0; r < preLayer.outputRow; r++) {
                 for (int c = 0; c < preLayer.outputColumn; c++) {
-                    delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn));
+                    delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn) / (this.filterRow * this.filterColumn));
                 }
             }
             preDeltas.add(delta);
@@ -71,7 +71,7 @@ public class CnnPoolingLayer extends CnnLayer {
 
     @Override
     protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
-
+        //do nothing
     }
 
 
@@ -133,15 +133,6 @@ public class CnnPoolingLayer extends CnnLayer {
 
     }
 
-    public static void main(String[] args) {
-        Matrix random = Matrix.random(8, 8, 10);
-        CnnPoolingLayer layer = new CnnPoolingLayer(2, 2, Strategy.Max);
-        layer.outputRow = 4;
-        layer.outputColumn = 4;
-        Matrix pooled = layer.new PoolingFilter().pooling(random);
-        System.out.println(random);
-        System.out.println(pooled);
-    }
 
 
 }

@@ -18,5 +18,9 @@ public class Functions {
      */
     public static Function<Double, Double> SigmoidDerivative = x ->  Functions.Sigmoid.apply(x) * ( 1 - Functions.Sigmoid.apply(x));
 
+    public static void main(String[] args){
+        System.out.println(Sigmoid.apply(40d));
+    }
+
 
 }

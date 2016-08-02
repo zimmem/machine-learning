@@ -1,5 +1,7 @@
 package com.zimmem.mnist;
 
+import java.awt.image.BufferedImage;
+
 /**
  * Created by zimmem on 2016/7/26.
  */
@@ -27,5 +29,15 @@ public class MnistImage {
 
     public void setLabel(int label) {
         this.label = label;
+    }
+
+    public BufferedImage asImage(){
+        BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_BYTE_GRAY);
+        for(int c = 0 ; c < 28 ; c++){
+            for (int r = 0 ; r < 28 ; r++){
+                image.setRGB(r, c , values[28 * c + r ]);
+            }
+        }
+        return image;
     }
 }

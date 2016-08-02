@@ -33,11 +33,11 @@ public class Matrix {
     }
 
 
-    public static Matrix random(int row, int column, double v) {
+    public static Matrix random(int row, int column, double min, double max) {
         Matrix matrix = new Matrix(row, column);
         for (int r = 0; r < row; r++) {
             for (int c = 0; c < column; c++) {
-                matrix.values[r][c] = random.nextDouble() * v;
+                matrix.values[r][c] = random.nextDouble() * (max - min) + min;
             }
         }
         return matrix;
@@ -80,6 +80,21 @@ public class Matrix {
         }
         return matrix;
     }
+
+    public Matrix minus(Matrix other) {
+        if (this.row != other.row || this.column != other.column) {
+            throw new IllegalArgumentException("row or column not match when Matrix minus.");
+        }
+        Matrix matrix = Matrix.zeros(row, column);
+        for (int r = 0; r < row; r++) {
+            for (int c = 0; c < column; c++) {
+                matrix.values[r][c] = this.values[r][c] - other.values[r][c];
+            }
+        }
+        return matrix;
+    }
+
+
 
     public Matrix T() {
         Matrix t = new Matrix(this.column, this.row);
@@ -165,8 +180,8 @@ public class Matrix {
     }
 
     public static void main(String[] args) {
-        Matrix random = Matrix.random(3, 3, 1);
+        Matrix random = Matrix.random(3, 3, -1, 1);
         System.out.println(random);
-        System.out.println(random.conv(Matrix.ones(2, 2), 5, 1));
+        //System.out.println(random.conv(Matrix.ones(2, 2), 5, 1));
     }
 }

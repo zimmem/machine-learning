@@ -24,7 +24,7 @@ public class CnnConvolutionLayer extends CnnLayer {
         this(kernelRow, kernelColumn, 0, 1, count, activationFunction);
     }
 
-    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count, Function<Double, Double> activationFunction) {
+    CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count, Function<Double, Double> activationFunction) {
         this.kernelRow = kernelRow;
         this.kernelColumn = kernelColumn;
         this.pad = pad;
@@ -35,9 +35,9 @@ public class CnnConvolutionLayer extends CnnLayer {
 
     private final int kernelRow;
     private final int kernelColumn;
-    List<ConvFilter> filters;
-    int pad;
-    int step;
+    private List<ConvFilter> filters;
+    private int pad;
+    private int step;
 
     private Function<Double, Double> activationFunction;
 
@@ -79,7 +79,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             preDeltas.add(Matrix.zeros(preLayer.outputRow, preLayer.outputColumn));
         }
         for (int i = 0; i < outputCount; i++) {
-            List<Matrix> featureDelta = filters.get(i).calculateDeltas(context.deltas.get(this).get(i));
+            List<Matrix> featureDelta = filters.get(i).calculateDeltas(deltas.get(i));
             for (int j = 0; j < preLayer.outputCount; j++) {
                 preDeltas.set(j, preDeltas.get(j).plus(featureDelta.get(j)));
             }
@@ -93,13 +93,13 @@ public class CnnConvolutionLayer extends CnnLayer {
     protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
         IntStream.range(0, filters.size()).forEach(fi -> {
             ConvFilter filter = filters.get(fi);
-            List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(this).get(fi)).collect(Collectors.toList());
-            filter.update();
+
+            filter.update(contexts, fi, eta);
         });
     }
 
 
-    class ConvFilter {
+    private class ConvFilter {
         double bias;
 
         List<Matrix> kernels;
@@ -108,7 +108,7 @@ public class CnnConvolutionLayer extends CnnLayer {
         ConvFilter(int kernelRow, int kernelColumn, int kernelCount) {
             kernels = new ArrayList<>(kernelCount);
             for (int i = 0; i < kernelCount; i++) {
-                kernels.add(Matrix.random(kernelRow, kernelColumn, 0.05d));
+                kernels.add(Matrix.random(kernelRow, kernelColumn, 0, 0.05d));
             }
         }
 
@@ -136,8 +136,33 @@ public class CnnConvolutionLayer extends CnnLayer {
 
         }
 
-        void update() {
+        void update(List<CnnContext> contexts, int index, double eta) {
+            List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(CnnConvolutionLayer.this).get(index)).collect(Collectors.toList());
+            this.bias += deltas.stream().mapToDouble(dm -> {
+                double sum = 0;
+                for (int r = 0; r < dm.getRow(); r++) {
+                    for (int c = 0; c < dm.getColumn(); c++) {
+                        sum += dm.getValue(r, c);
+                    }
+                }
+                return sum;
+            }).sum() * eta / contexts.size();
+            for (int j = 0; j < kernels.size(); j++) {
+                Matrix kernelWeight = Matrix.zeros(kernelRow, kernelColumn);
+                for (CnnContext context : contexts) {
+                    List<Matrix> preFeatures = context.features.get(preLayer);
+                    kernelWeight = kernelWeight.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
+                }
+                //kernelWeight.processUnits(d -> Functions.SigmoidDerivative.apply(d)/ contexts.size() * eta);
+                kernelWeight.processUnits(d -> Functions.SigmoidDerivative.apply(d) / contexts.size() * eta);
+                //kernelWeight.processUnits(d -> d / contexts.size() * eta);
+                kernels.set(j, kernels.get(j).plus(kernelWeight));
+
+            }
+
 
         }
+
+
     }
 }

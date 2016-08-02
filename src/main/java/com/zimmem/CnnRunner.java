@@ -4,19 +4,34 @@ import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 import com.zimmem.mnist.Mnist;
 import com.zimmem.mnist.MnistImage;
+import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
+import com.zimmem.neural.network.bp.TrainContext;
 import com.zimmem.neural.network.cnn.*;
+import org.omg.CORBA.Object;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 /**
  * Created by Zimmem on 2016/7/30.
  */
 public class CnnRunner {
 
-    public static void main(String[] args) throws IOException {
+    private static Logger log = LoggerFactory.getLogger(CnnRunner.class);
+
+    public static void main(String[] args) throws IOException, InterruptedException {
         ConvolutionNeuralNetwork network = NetworkBuilder.cnn()
                 .setInputConverter(i -> {
                     MnistImage image = (MnistImage) i;
@@ -36,11 +51,67 @@ public class CnnRunner {
                 .addLayer(new CnnConvolutionLayer(4, 4, 10, Functions.Sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0, 1), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 20, 10);
+        try {
+            network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0,10000), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 1);
+        }finally {
+            network.shutdown();
+        }
 
-        List<Matrix> result = network.forward(new CnnContext(), Mnist.loadImages("/mnist/train-images.idx3-ubyte").get(0));
-        System.out.println(result.size());
-        result.stream().forEach(System.out::println);
+//        List<Matrix> result = network.forward(new CnnContext(), Mnist.loadImages("/mnist/train-images.idx3-ubyte").get(0));
+//        System.out.println(result.size());
+//        result.stream().forEach(System.out::println);
+
+        List<MnistImage> testImages = Mnist.loadImages("/mnist/t10k-images.idx3-ubyte");
+        List<MnistLabel> testLabels = Mnist.loadLabels("/mnist/t10k-labels.idx1-ubyte");
+
+        AtomicInteger collect = new AtomicInteger(0);
+        AtomicInteger tested = new AtomicInteger(0);
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        CountDownLatch latch = new CountDownLatch(testImages.size());
+        File dir = new File("d:\\cnn-verify\\" + System.currentTimeMillis() + "\\");
+        dir.mkdirs();
+        log.info("created verify dir at {}", dir.getAbsoluteFile());
+        IntStream.range(0, testImages.size()).forEach(i -> {
+            MnistLabel label = testLabels.get(i);
+            MnistImage image = testImages.get(i);
+            executor.execute(() -> {
+                List<Matrix> output = network.forward(new CnnContext(), image);
+                double max = output.get(0).getValue(0, 0);
+                int resultLabel = 0;
+                for (int oi = 1; oi < output.size(); oi++) {
+                    if (output.get(oi).getValue(0, 0) > max) {
+                        max = output.get(oi).getValue(0, 0);
+                        resultLabel = oi;
+                    }
+                }
+                ;
+
+                File imageFile = null;
+                if (resultLabel == label.getValue()) {
+                    collect.incrementAndGet();
+                    imageFile = new File(dir.getAbsoluteFile() + "\\" + "r_" + i + "_" + resultLabel + ".jpg");
+                    System.out.println(max);
+                } else {
+                    imageFile = new File(dir.getAbsoluteFile() + "\\" + "w_" + i + "_" + resultLabel + ".jpg");
+                }
+                try {
+                    ImageIO.write(image.asImage(), "jpg", imageFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                tested.incrementAndGet();
+                if (tested.get() % 100 == 0) {
+                    log.info("testing mnist : {}/{} - {}", collect, tested, collect.doubleValue() / tested.doubleValue());
+                }
+                latch.countDown();
+            });
+        });
+        latch.await();
+        log.info("test finish {}/{} = {}", collect, testImages.size(), (double) collect.get() / testImages.size());
+        executor.shutdown();
+
+        network.shutdown();
 
     }
 

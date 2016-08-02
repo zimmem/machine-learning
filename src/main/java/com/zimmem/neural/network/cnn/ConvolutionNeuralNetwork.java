@@ -5,6 +5,7 @@ import com.zimmem.math.Matrix;
 import com.zimmem.mnist.MnistImage;
 import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.Network;
+import com.zimmem.neural.network.bp.TrainContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,8 +13,10 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 /**
  * Created by Zimmem on 2016/7/30.
@@ -46,22 +49,26 @@ public class ConvolutionNeuralNetwork implements Network {
             AtomicInteger batchCorrect = new AtomicInteger(0);
             double verifyRate = 0d;
             for (int batch = 0; batch < images.size(); batch += batchSize) {
-//                if (batch % 1000 == 0) {
-//                    // 每训练1000个数据， 拿最后1000个数据做下验证
-//                    verifyRate = verify(images.subList(images.size() - 1000, images.size()));
-//                }
+                if (batch % 1000 == 0) {
+                    // 每训练1000个数据， 拿最后1000个数据做下验证
+                    verifyRate = verify(images.subList(images.size() - 1000, images.size()));
+                }
 
                 batchCorrect.set(0);
                 List<CnnContext> contexts = new ArrayList<>(batchSize);
                 CountDownLatch latch = new CountDownLatch(batchSize);
                 for (int index = batch; index < batch + batchSize && index < images.size(); index++) {
                     MnistImage image = images.get(index);
-                    executor.execute(() -> {
+                    //executor.execute(() -> {
                         CnnContext context = new CnnContext();
                         synchronized (contexts) {
                             contexts.add(context);
                         }
                         List<Matrix> output = forward(context, image);
+                        long count = output.stream().mapToDouble(m -> m.getValue(0, 0)).filter(i -> i == 1d).count();
+                        if(count > 0){
+                            throw new RuntimeException("xx "  + count);
+                        }
                         double max = output.stream().mapToDouble(m -> m.getValue(0, 0)).max().getAsDouble();
 
                         if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0))) {
@@ -73,28 +80,15 @@ public class ConvolutionNeuralNetwork implements Network {
                         for (int i = 0; i < outputLayer.outputCount; i++) {
                             // 输出层残差， 目前只支持激活函数为Sigmoid的情况
                             double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * Functions.SigmoidDerivative.apply(context.weightedInputs.get(outputLayer).get(i).getValue(0, 0));
+                            //double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * (1 - output.get(i).getValue(0,0)) * output.get(i).getValue(0,0);
                             outputDeltas.add(Matrix.zeros(1, 1).setValue(0, 0, delta));
+
                         }
                         context.deltas.put(outputLayer, outputDeltas);
                         outputLayer.backPropagationDelta(context);
-                        System.out.println(context.deltas.get(inputLayer.nextLayer));
-
-
-//
-//                        // 输出与期望的偏差
-//                        double[] expect = new double[output.length];
-//                        expect[image.getLabel()] = 1;
-//                        double[] error = new double[output.length];
-//                        for (int i = 0; i < output.length; i++) {
-//                            error[i] = output[i] - expect[i];
-//                        }
-
-                        // 计算 output 层偏差
-//                        double[] deltas = new double[outputLayer.size];
-//                        IntStream.range(0, outputLayer.size).forEach(i -> deltas[i] = error[i] * Functions.SigmoidDerivative.apply(context.weightedInputs.get(outputLayer)[i]));
-//                        outputLayer.backPropagationDelta(context, deltas);
+                        //System.out.println(context.deltas.get(inputLayer.nextLayer).get(0).getColumn());
                         latch.countDown();
-                    });
+                    //});
                 }
                 try {
                     latch.await();
@@ -104,8 +98,10 @@ public class ConvolutionNeuralNetwork implements Network {
                 correct += batchCorrect.get();
                 log.debug("batch {} : {}/{} - total {}/{} = {} ", batch / batchSize + 1, batchCorrect, batchSize, correct, batch + batchSize, (double) correct / (batch + batchSize));
 
-                outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 3));
-                //resetTrainData();
+                outputLayer.backPropagationUpdate(contexts, .5d);
+                //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate , epoch));
+                //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 0.85));
+
 
 
             }
@@ -122,7 +118,35 @@ public class ConvolutionNeuralNetwork implements Network {
 
     }
 
+    public void shutdown() throws InterruptedException {
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+    }
+
     private double verify(List<MnistImage> mnistImages) {
-        return 0d;
+        AtomicInteger collect = new AtomicInteger(0);
+
+
+
+        CountDownLatch latch = new CountDownLatch(mnistImages.size());
+        IntStream.range(0, mnistImages.size()).forEach(i -> {
+            executor.execute(() -> {
+                List<Matrix> output = forward(new CnnContext(), mnistImages.get(i));
+
+                double max = output.stream().mapToDouble(o -> o.getValue(0, 0 )).max().getAsDouble();
+                if (Objects.equals(output.get(mnistImages.get(i).getLabel()).getValue(0,0), max)) {
+                    collect.incrementAndGet();
+                }
+                latch.countDown();
+            });
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        double rate = collect.doubleValue() / mnistImages.size();
+        log.info("verified {}/{} = {}", collect, mnistImages.size(), rate);
+        return rate;
     }
 }
