@@ -1,5 +1,6 @@
 package com.zimmem;
 
+import com.zimmem.math.ActivationFunction;
 import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 import com.zimmem.mnist.Mnist;
@@ -44,11 +45,14 @@ public class CnnRunner {
                     return Arrays.asList(m);
                 })
                 .addLayer(new CnnInputLayer(28, 28))
-                .addLayer(new CnnConvolutionLayer(5, 5, 6, Functions.Sigmoid))
+                .addLayer(new CnnConvolutionLayer(5, 5, 6))
+                .addLayer(new ActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
-                .addLayer(new CnnConvolutionLayer(5, 5, 16, Functions.Sigmoid))
+                .addLayer(new CnnConvolutionLayer(5, 5, 16))
+                .addLayer(new ActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
-                .addLayer(new CnnConvolutionLayer(4, 4, 10, Functions.Sigmoid))
+                .addLayer(new CnnConvolutionLayer(4, 4, 10))
+                .addLayer(new ActivationLayer(ActivationFunction.Sigmoid))
                 .build();
 
         try {
@@ -84,13 +88,12 @@ public class CnnRunner {
                         resultLabel = oi;
                     }
                 }
-                ;
 
                 File imageFile = null;
                 if (resultLabel == label.getValue()) {
                     collect.incrementAndGet();
                     imageFile = new File(dir.getAbsoluteFile() + "\\" + "r_" + i + "_" + resultLabel + ".jpg");
-                    System.out.println(max);
+                    System.out.println(output);
                 } else {
                     imageFile = new File(dir.getAbsoluteFile() + "\\" + "w_" + i + "_" + resultLabel + ".jpg");
                 }

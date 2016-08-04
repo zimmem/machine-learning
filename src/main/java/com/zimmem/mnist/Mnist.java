@@ -2,35 +2,18 @@ package com.zimmem.mnist;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
-import java.net.URI;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by zimmem on 2016/7/26.
  */
 public class Mnist {
-
-    public static MnistDataSet trainData() {
-        return null;
-    }
-
-    public static MnistDataSet validData() {
-        return null;
-    }
-
-    public static MnistDataSet testData() {
-        return null;
-    }
-
 
     public static List<MnistImage> loadImages(String file) throws IOException {
 

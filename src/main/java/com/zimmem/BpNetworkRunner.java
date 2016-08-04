@@ -30,12 +30,12 @@ public class BpNetworkRunner {
     public static void main(String[] args) throws IOException, InterruptedException {
         BPNetwork network = NetworkBuilder.bp()
                 .addLayer(new Layer(28 * 28, null))
-                .addLayer(new Layer(80, Functions.Sigmoid))
+                .addLayer(new Layer(200, Functions.Sigmoid))
                 //.addLayer(new Layer(50, Functions.Sigmoid))
                 .addLayer(new Layer(10, Functions.Sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 10, 10);
+        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 10);
 
 //        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("model." + System.currentTimeMillis()));
 //        oos.writeObject(network);

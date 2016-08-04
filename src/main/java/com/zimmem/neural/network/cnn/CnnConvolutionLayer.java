@@ -1,11 +1,9 @@
 package com.zimmem.neural.network.cnn;
 
-import com.zimmem.math.Functions;
 import com.zimmem.math.Matrix;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,16 +18,15 @@ public class CnnConvolutionLayer extends CnnLayer {
      * @param kernelColumn 过滤器高
      * @param count        生成几个结果
      */
-    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int count, Function<Double, Double> activationFunction) {
-        this(kernelRow, kernelColumn, 0, 1, count, activationFunction);
+    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int count) {
+        this(kernelRow, kernelColumn, 0, 1, count);
     }
 
-    CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count, Function<Double, Double> activationFunction) {
+    CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count) {
         this.kernelRow = kernelRow;
         this.kernelColumn = kernelColumn;
         this.pad = pad;
         this.step = step;
-        this.activationFunction = activationFunction;
         this.outputCount = count;
     }
 
@@ -39,7 +36,6 @@ public class CnnConvolutionLayer extends CnnLayer {
     private int pad;
     private int step;
 
-    private Function<Double, Double> activationFunction;
 
 
     public void init() {
@@ -57,13 +53,9 @@ public class CnnConvolutionLayer extends CnnLayer {
     protected void propagation(CnnContext context) {
 
         List<Matrix> features = new ArrayList<>(outputCount);
-        List<Matrix> weightedInputs = new ArrayList<>(outputCount);
         for (int i = 0; i < outputCount; i++) {
-            Matrix weighted = filters.get(i).filter(context.features.get(preLayer));
-            weightedInputs.add(weighted);
-            features.add(weighted.processUnits(d -> activationFunction.apply(d)));
+            features.add(filters.get(i).filter(context.features.get(preLayer)));
         }
-        context.weightedInputs.put(this, weightedInputs);
         context.features.put(this, features);
 
     }
@@ -101,7 +93,6 @@ public class CnnConvolutionLayer extends CnnLayer {
 
     private class ConvFilter {
         double bias;
-
         List<Matrix> kernels;
 
 
@@ -130,7 +121,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             for (int i = 0; i < preLayer.outputCount; i++) {
                 // 暂不考虑 正向 conv 时 step > 1 的情况
                 // 为什么转180度？
-                preDeltas.add(delta.conv(kernels.get(i).rotate180(), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
+                preDeltas.add(delta.rotate180().conv(kernels.get(i), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
             }
             return preDeltas;
 
@@ -148,15 +139,12 @@ public class CnnConvolutionLayer extends CnnLayer {
                 return sum;
             }).sum() * eta / contexts.size();
             for (int j = 0; j < kernels.size(); j++) {
-                Matrix kernelWeight = Matrix.zeros(kernelRow, kernelColumn);
+                Matrix kernelDelta = Matrix.zeros(kernelRow, kernelColumn);
                 for (CnnContext context : contexts) {
                     List<Matrix> preFeatures = context.features.get(preLayer);
-                    kernelWeight = kernelWeight.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
+                    kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
                 }
-                //kernelWeight.processUnits(d -> Functions.SigmoidDerivative.apply(d)/ contexts.size() * eta);
-                kernelWeight.processUnits(d -> Functions.SigmoidDerivative.apply(d) / contexts.size() * eta);
-                //kernelWeight.processUnits(d -> d / contexts.size() * eta);
-                kernels.set(j, kernels.get(j).plus(kernelWeight));
+                kernels.set(j, kernels.get(j).plus(kernelDelta).processUnits(d -> d / contexts.size()));
 
             }
 

@@ -60,34 +60,34 @@ public class ConvolutionNeuralNetwork implements Network {
                 for (int index = batch; index < batch + batchSize && index < images.size(); index++) {
                     MnistImage image = images.get(index);
                     //executor.execute(() -> {
-                        CnnContext context = new CnnContext();
-                        synchronized (contexts) {
-                            contexts.add(context);
-                        }
-                        List<Matrix> output = forward(context, image);
-                        long count = output.stream().mapToDouble(m -> m.getValue(0, 0)).filter(i -> i == 1d).count();
-                        if(count > 0){
-                            throw new RuntimeException("xx "  + count);
-                        }
-                        double max = output.stream().mapToDouble(m -> m.getValue(0, 0)).max().getAsDouble();
+                    CnnContext context = new CnnContext();
+                    synchronized (contexts) {
+                        contexts.add(context);
+                    }
+                    List<Matrix> output = forward(context, image);
+                    long count = output.stream().mapToDouble(m -> m.getValue(0, 0)).filter(i -> i == 1d).count();
+                    if (count > 0) {
+                        throw new RuntimeException("xx " + count);
+                    }
+                    double max = output.stream().mapToDouble(m -> m.getValue(0, 0)).max().getAsDouble();
+                    long noMaxCount = output.stream().mapToDouble(m -> m.getValue(0, 0)).filter(d -> d == max).count();
 
-                        if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0))) {
-                            //System.out.println(Arrays.toString(output));
-                            batchCorrect.getAndIncrement();
-                        }
+                    if (!Double.isNaN(max) && Objects.equals(max, output.get(image.getLabel()).getValue(0, 0)) && noMaxCount < 2) {
+                        //System.out.println(output);
+                        batchCorrect.getAndIncrement();
+                    }
 
-                        List<Matrix> outputDeltas = new ArrayList<Matrix>(outputLayer.outputCount);
-                        for (int i = 0; i < outputLayer.outputCount; i++) {
-                            // 输出层残差， 目前只支持激活函数为Sigmoid的情况
-                            double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * Functions.SigmoidDerivative.apply(context.weightedInputs.get(outputLayer).get(i).getValue(0, 0));
-                            //double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * (1 - output.get(i).getValue(0,0)) * output.get(i).getValue(0,0);
-                            outputDeltas.add(Matrix.zeros(1, 1).setValue(0, 0, delta));
+                    List<Matrix> outputDeltas = new ArrayList<Matrix>(outputLayer.outputCount);
+                    for (int i = 0; i < outputLayer.outputCount; i++) {
+                        // 输出层残差， 目前只支持激活函数为Sigmoid的情况
+                        double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * Functions.SigmoidDerivative.apply(context.features.get(outputLayer.preLayer).get(i).getValue(0, 0));
+                        outputDeltas.add(Matrix.zeros(1, 1).setValue(0, 0, delta));
 
-                        }
-                        context.deltas.put(outputLayer, outputDeltas);
-                        outputLayer.backPropagationDelta(context);
-                        //System.out.println(context.deltas.get(inputLayer.nextLayer).get(0).getColumn());
-                        latch.countDown();
+                    }
+                    context.deltas.put(outputLayer, outputDeltas);
+                    outputLayer.backPropagationDelta(context);
+                    //System.out.println(context.deltas.get(inputLayer.nextLayer).get(0).getColumn());
+                    latch.countDown();
                     //});
                 }
                 try {
@@ -101,7 +101,6 @@ public class ConvolutionNeuralNetwork implements Network {
                 outputLayer.backPropagationUpdate(contexts, .5d);
                 //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate , epoch));
                 //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 0.85));
-
 
 
             }
@@ -127,15 +126,17 @@ public class ConvolutionNeuralNetwork implements Network {
         AtomicInteger collect = new AtomicInteger(0);
 
 
-
         CountDownLatch latch = new CountDownLatch(mnistImages.size());
         IntStream.range(0, mnistImages.size()).forEach(i -> {
             executor.execute(() -> {
                 List<Matrix> output = forward(new CnnContext(), mnistImages.get(i));
 
-                double max = output.stream().mapToDouble(o -> o.getValue(0, 0 )).max().getAsDouble();
-                if (Objects.equals(output.get(mnistImages.get(i).getLabel()).getValue(0,0), max)) {
+                double max = output.stream().mapToDouble(o -> o.getValue(0, 0)).max().getAsDouble();
+                if (Objects.equals(output.get(mnistImages.get(i).getLabel()).getValue(0, 0), max)) {
                     collect.incrementAndGet();
+                }
+                if(i == mnistImages.size() - 1){
+                    System.out.println(output);
                 }
                 latch.countDown();
             });

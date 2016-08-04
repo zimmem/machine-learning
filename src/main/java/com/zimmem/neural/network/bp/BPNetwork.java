@@ -40,7 +40,7 @@ public class BPNetwork implements Network, Serializable {
             images.get(i).setLabel(labels.get(i).getValue());
         }
 
-        for(int epoch = 1; epoch <= repeat; epoch++ ){
+        for (int epoch = 1; epoch <= repeat; epoch++) {
             //重复 repeat 次
 
             Collections.shuffle(images);
@@ -96,7 +96,8 @@ public class BPNetwork implements Network, Serializable {
                 log.debug("batch {} : {}/{} - total {}/{} = {} ", batch / batchSize + 1, batchCorrect, batchSize, correct, batch + batchSize, (double) correct / (batch + batchSize));
 
                 //outputLayer.backPropagationUpdate(contexts, Math.pow(1 - verifyRate, 3));
-                outputLayer.backPropagationUpdate(contexts,0.1);
+                Random r = new Random();
+                outputLayer.backPropagationUpdate(contexts, (1 - verifyRate) * r.nextDouble());
                 //resetTrainData();
 
 
@@ -176,18 +177,18 @@ public class BPNetwork implements Network, Serializable {
         });
 
         long timestamp = System.currentTimeMillis();
-        for(int i = 0 ; i < imgs.length ; i ++ ){
+        for (int i = 0; i < imgs.length; i++) {
             BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_3BYTE_BGR);
             double max = Arrays.stream(imgs[i]).map(Math::abs).max().getAsDouble();
-            for(int c = 0 ; c < 28 ; c++){
-                for (int r = 0 ; r < 28 ; r++){
+            for (int c = 0; c < 28; c++) {
+                for (int r = 0; r < 28; r++) {
                     double weight = imgs[i][28 * c + r];
-                    int bgr  = weight > 0 ? (int) (255 * weight / max) << 16 : (int) (- 255 * weight / max)  ;
-                    image.setRGB(r, c , bgr );
+                    int bgr = weight > 0 ? (int) (255 * weight / max) << 16 : (int) (-255 * weight / max);
+                    image.setRGB(r, c, bgr);
                 }
             }
             try {
-                ImageIO.write(image,"jpg", new File("present\\" +  timestamp + "_" + epoch + "_" + i + ".jpg"));
+                ImageIO.write(image, "jpg", new File("present\\" + timestamp + "_" + epoch + "_" + i + ".jpg"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
