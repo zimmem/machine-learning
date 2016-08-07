@@ -48,7 +48,7 @@ public class CnnRunner {
                 .addLayer(new CnnConvolutionLayer(5, 5, 6))
                 .addLayer(new ActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
-                .addLayer(new CnnConvolutionLayer(5, 5, 16))
+                .addLayer(new CnnConvolutionLayer(5, 5, 12))
                 .addLayer(new ActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
                 .addLayer(new CnnConvolutionLayer(4, 4, 10))
@@ -56,7 +56,7 @@ public class CnnRunner {
                 .build();
 
         try {
-            network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte").subList(0,10000), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 1);
+            network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 20, 10);
         }finally {
             network.shutdown();
         }

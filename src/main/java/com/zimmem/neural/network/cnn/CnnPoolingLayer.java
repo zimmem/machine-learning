@@ -12,7 +12,6 @@ import java.util.stream.IntStream;
  */
 public class CnnPoolingLayer extends CnnLayer {
 
-    private List<PoolingFilter> filters;
 
     private int filterRow;
 
@@ -30,10 +29,7 @@ public class CnnPoolingLayer extends CnnLayer {
         this.outputColumn = preLayer.outputColumn / filterColumn;
         this.outputRow = preLayer.outputRow / filterRow;
         this.outputCount = preLayer.outputCount;
-        filters = new ArrayList<>(outputCount);
-        for (int i = 0; i < outputCount; i++) {
-            filters.add(new PoolingFilter());
-        }
+
     }
 
     @Override
@@ -42,7 +38,7 @@ public class CnnPoolingLayer extends CnnLayer {
         List<Matrix> preOutput = context.features.get(preLayer);
         List<Matrix> weightedInputs = new ArrayList<>(outputCount);
         IntStream.range(0, outputCount).forEach(i -> {
-            Matrix pooled = filters.get(i).pooling(preOutput.get(i));
+            Matrix pooled = pooling(preOutput.get(i));
             output.add(pooled);
             weightedInputs.add(pooled);
         });
@@ -60,7 +56,8 @@ public class CnnPoolingLayer extends CnnLayer {
             Matrix delta = Matrix.zeros(preLayer.outputRow, preLayer.outputColumn);
             for (int r = 0; r < preLayer.outputRow; r++) {
                 for (int c = 0; c < preLayer.outputColumn; c++) {
-                    delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn) / (this.filterRow * this.filterColumn));
+                    //delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn) / (this.filterRow * this.filterColumn));
+                    delta.setValue(r, c, deltas.get(i).getValue(r / this.filterRow, c / this.filterColumn) );
                 }
             }
             preDeltas.add(delta);
@@ -75,27 +72,24 @@ public class CnnPoolingLayer extends CnnLayer {
     }
 
 
-    class PoolingFilter {
+    Matrix pooling(Matrix source) {
 
+        Matrix target = Matrix.zeros(outputRow, outputColumn);
 
-        Matrix pooling(Matrix source) {
-
-            Matrix target = Matrix.zeros(outputRow, outputColumn);
-
-            for (int r = 0; r < source.getRow() / filterRow; r++) {
-                for (int c = 0; c < source.getColumn() / filterColumn; c++) {
-                    double[][] sub = new double[filterRow][filterColumn];
-                    for (int tr = 0; tr < filterRow; tr++) {
-                        for (int tc = 0; tc < filterColumn; tc++) {
-                            sub[tr][tc] = source.getValue(tr + r * filterRow, tc + c * filterColumn);
-                        }
+        for (int r = 0; r < source.getRow() / filterRow; r++) {
+            for (int c = 0; c < source.getColumn() / filterColumn; c++) {
+                double[][] sub = new double[filterRow][filterColumn];
+                for (int tr = 0; tr < filterRow; tr++) {
+                    for (int tc = 0; tc < filterColumn; tc++) {
+                        sub[tr][tc] = source.getValue(tr + r * filterRow, tc + c * filterColumn);
                     }
-                    target.setValue(r, c, strategy.apply(new Matrix(sub)));
                 }
+                target.setValue(r, c, strategy.apply(new Matrix(sub)));
             }
-            return target;
         }
+        return target;
     }
+
 
     public static class Strategy {
 
@@ -132,7 +126,6 @@ public class CnnPoolingLayer extends CnnLayer {
         static public Function<Matrix, Double> Means = m -> Sum.apply(m) / (m.getColumn() * m.getRow());
 
     }
-
 
 
 }

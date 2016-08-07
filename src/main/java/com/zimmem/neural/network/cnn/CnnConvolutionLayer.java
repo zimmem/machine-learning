@@ -32,10 +32,9 @@ public class CnnConvolutionLayer extends CnnLayer {
 
     private final int kernelRow;
     private final int kernelColumn;
-    private List<ConvFilter> filters;
+     List<ConvFilter> filters;
     private int pad;
     private int step;
-
 
 
     public void init() {
@@ -91,7 +90,7 @@ public class CnnConvolutionLayer extends CnnLayer {
     }
 
 
-    private class ConvFilter {
+     class ConvFilter {
         double bias;
         List<Matrix> kernels;
 
@@ -121,7 +120,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             for (int i = 0; i < preLayer.outputCount; i++) {
                 // 暂不考虑 正向 conv 时 step > 1 的情况
                 // 为什么转180度？
-                preDeltas.add(delta.rotate180().conv(kernels.get(i), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
+                preDeltas.add(delta.conv(kernels.get(i).rotate180(), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
             }
             return preDeltas;
 
@@ -144,7 +143,9 @@ public class CnnConvolutionLayer extends CnnLayer {
                     List<Matrix> preFeatures = context.features.get(preLayer);
                     kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
                 }
-                kernels.set(j, kernels.get(j).plus(kernelDelta).processUnits(d -> d / contexts.size()));
+                kernelDelta = kernelDelta.processUnits(d -> d * eta / contexts.size());
+
+                kernels.set(j, kernels.get(j).plus(kernelDelta));
 
             }
 

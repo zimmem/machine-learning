@@ -35,4 +35,8 @@ public interface ActivationFunction {
         }
     };
 
+    public static void main(String[] args){
+        System.out.println(Sigmoid.runDerivative(Double.parseDouble("-8.148001762954165E-5")));
+    }
+
 }

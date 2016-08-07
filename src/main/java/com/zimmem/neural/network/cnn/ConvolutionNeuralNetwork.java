@@ -77,10 +77,9 @@ public class ConvolutionNeuralNetwork implements Network {
                         batchCorrect.getAndIncrement();
                     }
 
-                    List<Matrix> outputDeltas = new ArrayList<Matrix>(outputLayer.outputCount);
+                    List<Matrix> outputDeltas = new ArrayList<>(outputLayer.outputCount);
                     for (int i = 0; i < outputLayer.outputCount; i++) {
-                        // 输出层残差， 目前只支持激活函数为Sigmoid的情况
-                        double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0)) * Functions.SigmoidDerivative.apply(context.features.get(outputLayer.preLayer).get(i).getValue(0, 0));
+                        double delta = ((i == image.getLabel() ? 1 : 0) - output.get(i).getValue(0, 0));
                         outputDeltas.add(Matrix.zeros(1, 1).setValue(0, 0, delta));
 
                     }
