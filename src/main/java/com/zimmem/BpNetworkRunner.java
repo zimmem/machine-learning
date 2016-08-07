@@ -30,7 +30,7 @@ public class BpNetworkRunner {
     public static void main(String[] args) throws IOException, InterruptedException {
         BPNetwork network = NetworkBuilder.bp()
                 .addLayer(new Layer(28 * 28, null))
-                .addLayer(new Layer(1000, Functions.Sigmoid))
+                .addLayer(new Layer(200, Functions.Sigmoid))
                 //.addLayer(new Layer(50, Functions.Sigmoid))
                 .addLayer(new Layer(10, Functions.Sigmoid))
                 .build();

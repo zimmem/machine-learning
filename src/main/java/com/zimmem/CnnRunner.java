@@ -93,7 +93,6 @@ public class CnnRunner {
                 if (resultLabel == label.getValue()) {
                     collect.incrementAndGet();
                     imageFile = new File(dir.getAbsoluteFile() + "\\" + "r_" + i + "_" + resultLabel + ".jpg");
-                    System.out.println(output);
                 } else {
                     imageFile = new File(dir.getAbsoluteFile() + "\\" + "w_" + i + "_" + resultLabel + ".jpg");
                 }
