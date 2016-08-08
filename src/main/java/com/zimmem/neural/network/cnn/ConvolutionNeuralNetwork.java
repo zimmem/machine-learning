@@ -52,12 +52,11 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                             contexts.add(context);
                         }
                         List<Matrix> output = forward(context);
-
                         listeners.stream().forEach(l -> l.onForwardFinish(context, output));
+
                         List<Matrix> outputDeltas = IntStream.range(0, outputLayer.outputCount).mapToObj(i ->
                                 context.getExcepted().get(i).minus(output.get(i))
                         ).collect(Collectors.toList());
-
 
                         context.deltas.put(outputLayer, outputDeltas);
                         outputLayer.backPropagationDelta(context);

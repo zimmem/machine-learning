@@ -98,7 +98,7 @@ public class CnnConvolutionLayer extends CnnLayer {
         ConvFilter(int kernelRow, int kernelColumn, int kernelCount) {
             kernels = new ArrayList<>(kernelCount);
             for (int i = 0; i < kernelCount; i++) {
-                kernels.add(Matrix.random(kernelRow, kernelColumn, 0, 0.05d));
+                kernels.add(Matrix.random(kernelRow, kernelColumn, 0.0d, 0.05d));
             }
         }
 

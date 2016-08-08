@@ -49,15 +49,13 @@ public class CnnRunner {
             List<CnnTrainInput> inputs = IntStream.range(0, trainImages.size()).mapToObj(i -> {
                 MnistImage image = trainImages.get(i);
                 List<Matrix> input = Collections.singletonList(image.asMatrix());
-
                 int label = trainLabels.get(i).getValue();
-                List<Matrix> expected = IntStream.range(0, 10)
-                        .mapToObj(l -> new Matrix(new double[][]{new double[]{l == label ? 1d : 0d}}))
-                        .collect(Collectors.toList());
-                CnnTrainInput cnnInput = new CnnTrainInput(input, expected);
-                return cnnInput;
+                List<Matrix> expected = IntStream.range(0, 10).mapToObj(l -> Matrix.single(l == label ? 1d : 0d)).collect(Collectors.toList());
+                return new CnnTrainInput(input, expected);
             }).collect(Collectors.toList());
+
             network.train(inputs, 20, 10);
+
         } finally {
             network.shutdown();
         }
@@ -114,7 +112,6 @@ public class CnnRunner {
         executor.shutdown();
 
     }
-
 
 
 }
