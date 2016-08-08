@@ -9,10 +9,10 @@ import java.util.List;
  */
 public class CnnInputLayer extends  CnnLayer {
 
-    public CnnInputLayer(int outputRow, int outputColumn){
+    public CnnInputLayer(int outputRow, int outputColumn, int outputCount){
         this.outputRow = outputRow;
         this.outputColumn = outputColumn;
-        this.outputCount = 1;
+        this.outputCount = outputCount;
     }
 
 
@@ -21,14 +21,14 @@ public class CnnInputLayer extends  CnnLayer {
     }
 
     @Override
-    protected List<Matrix> calculatePreDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
         // donothing
 
         return null;
     }
 
     @Override
-    protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
+    protected void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta) {
 
     }
 }

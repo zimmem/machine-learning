@@ -1,3 +1,5 @@
 target
 .idea
 *.iml
+cifar-10-batches-bin/
+present/

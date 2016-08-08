@@ -8,17 +8,17 @@
     </appender>
 
     <appender name="z-file" class="org.apache.log4j.FileAppender">
+        <param name="File" value="target/b.txt"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
-        <param name="File" value="target/z.txt"/>
     </appender>
 
     <appender name="b-file" class="org.apache.log4j.FileAppender">
+        <param name="File" value="target/b.txt"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
-        <param name="File" value="target/b.txt"/>
     </appender>
 
     <logger name="z" additivity="false">

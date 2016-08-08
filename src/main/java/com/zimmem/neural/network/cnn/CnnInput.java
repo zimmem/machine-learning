@@ -2,16 +2,16 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Created by Zimmem on 2016/7/30.
+ * Created by zimmem on 2016/8/8.
  */
-public class CnnContext {
+public class CnnInput {
 
-    Map<CnnLayer, List<Matrix>> features = new HashMap<>();
+    public CnnInput(List<Matrix> inputs) {
+        this.inputs = inputs;
+    }
 
     private List<Matrix> inputs ;
 

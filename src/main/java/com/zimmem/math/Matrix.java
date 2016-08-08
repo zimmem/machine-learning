@@ -43,6 +43,12 @@ public class Matrix {
         return matrix;
     }
 
+    public static Matrix single(double value){
+        Matrix matrix = new Matrix(1, 1);
+        matrix.values[0][0] = value;
+        return matrix;
+    }
+
 
     public double getValue(int row, int column) {
         return values[row][column];

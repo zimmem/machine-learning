@@ -61,7 +61,7 @@ public class CnnConvolutionLayer extends CnnLayer {
 
 
     @Override
-    protected List<Matrix> calculatePreDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
 
 
         List<Matrix> deltas = context.deltas.get(this);
@@ -81,7 +81,7 @@ public class CnnConvolutionLayer extends CnnLayer {
     }
 
     @Override
-    protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
+    protected void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta) {
         IntStream.range(0, filters.size()).forEach(fi -> {
             ConvFilter filter = filters.get(fi);
 
@@ -126,7 +126,7 @@ public class CnnConvolutionLayer extends CnnLayer {
 
         }
 
-        void update(List<CnnContext> contexts, int index, double eta) {
+        void update(List<CnnTrainContext> contexts, int index, double eta) {
             List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(CnnConvolutionLayer.this).get(index)).collect(Collectors.toList());
             this.bias += deltas.stream().mapToDouble(dm -> {
                 double sum = 0;
@@ -139,7 +139,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             }).sum() * eta / contexts.size();
             for (int j = 0; j < kernels.size(); j++) {
                 Matrix kernelDelta = Matrix.zeros(kernelRow, kernelColumn);
-                for (CnnContext context : contexts) {
+                for (CnnTrainContext context : contexts) {
                     List<Matrix> preFeatures = context.features.get(preLayer);
                     kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
                 }

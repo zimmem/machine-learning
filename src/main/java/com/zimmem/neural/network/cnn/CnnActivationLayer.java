@@ -11,11 +11,11 @@ import java.util.stream.IntStream;
 /**
  * Created by zimmem on 2016/8/4.
  */
-public class ActivationLayer extends CnnLayer {
+public class CnnActivationLayer extends CnnLayer {
 
     private ActivationFunction activationFunction;
 
-    public ActivationLayer(ActivationFunction function) {
+    public CnnActivationLayer(ActivationFunction function) {
 
         activationFunction = function;
     }
@@ -35,7 +35,7 @@ public class ActivationLayer extends CnnLayer {
     }
 
     @Override
-    protected List<Matrix> calculatePreDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
         return IntStream.range(0, outputCount).mapToObj(i -> {
             Matrix predelta = context.deltas.get(this).get(i);
             Matrix result = Matrix.zeros(predelta.getRow(), predelta.getColumn());
@@ -49,7 +49,7 @@ public class ActivationLayer extends CnnLayer {
     }
 
     @Override
-    protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
+    protected void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta) {
         // do nothing
     }
 }

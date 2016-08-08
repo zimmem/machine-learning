@@ -1,5 +1,7 @@
 package com.zimmem.mnist;
 
+import com.zimmem.math.Matrix;
+
 import java.awt.image.BufferedImage;
 
 /**
@@ -39,5 +41,15 @@ public class MnistImage {
             }
         }
         return image;
+    }
+
+    public Matrix asMatrix(){
+        Matrix m = new Matrix(28, 28);
+        for (int c = 0; c < 28; c++) {
+            for (int r = 0; r < 28; r++) {
+                m.setValue(r, c, (values[28 * c + r] & 0xff) > 0 ? 1d : 0d);
+            }
+        }
+        return  m;
     }
 }

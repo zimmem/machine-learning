@@ -42,12 +42,11 @@ public class CnnPoolingLayer extends CnnLayer {
             output.add(pooled);
             weightedInputs.add(pooled);
         });
-        context.weightedInputs.put(this, weightedInputs);
         context.features.put(this, output);
     }
 
     @Override
-    protected List<Matrix> calculatePreDelta(CnnContext context) {
+    protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
 
         List<Matrix> deltas = context.deltas.get(this);
         List<Matrix> preDeltas = new ArrayList<>(preLayer.outputCount);
@@ -67,7 +66,7 @@ public class CnnPoolingLayer extends CnnLayer {
     }
 
     @Override
-    protected void updateWeightsAndBias(List<CnnContext> contexts, double eta) {
+    protected void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta) {
         //do nothing
     }
 

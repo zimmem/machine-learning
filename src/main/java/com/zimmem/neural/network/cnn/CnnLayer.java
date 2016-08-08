@@ -33,7 +33,7 @@ public abstract class CnnLayer {
     void init() {
     }
 
-    void backPropagationDelta(CnnContext context){
+    void backPropagationDelta(CnnTrainContext context){
 
         //第一层不用计算残差
         if(preLayer != null && preLayer.preLayer != null){
@@ -48,7 +48,7 @@ public abstract class CnnLayer {
      * @param contexts
      * @param eta 学习速率
      */
-    void backPropagationUpdate(List<CnnContext> contexts, double eta) {
+    void backPropagationUpdate(List<CnnTrainContext> contexts, double eta) {
 
         updateWeightsAndBias(contexts, eta);
 
@@ -65,7 +65,7 @@ public abstract class CnnLayer {
      * 计算上层残差
      * @param context
      */
-    protected abstract List<Matrix> calculatePreDelta(CnnContext context);
+    protected abstract List<Matrix> calculatePreDelta(CnnTrainContext context);
 
-    protected abstract void updateWeightsAndBias(List<CnnContext> contexts, double eta);
+    protected abstract void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta);
 }

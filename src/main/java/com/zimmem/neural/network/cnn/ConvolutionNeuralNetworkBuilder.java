@@ -2,20 +2,22 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.neural.network.NetworkBuilder;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
  * Created by Zimmem on 2016/7/30.
  */
-public class ConvolutionNeuralNetworkBuilder extends NetworkBuilder<ConvolutionNeuralNetwork> {
+public class ConvolutionNeuralNetworkBuilder /**extends NetworkBuilder<ConvolutionNeuralNetwork> **/{
 
     private CnnLayer firstLayer;
 
     private CnnLayer latestLayer;
 
-
-
-    Function inputConverter;
+    private List<CnnTrainListener> listeners;
 
 
     public ConvolutionNeuralNetworkBuilder addLayer(CnnLayer layer) {
@@ -31,13 +33,14 @@ public class ConvolutionNeuralNetworkBuilder extends NetworkBuilder<ConvolutionN
         return this;
     }
 
-    public ConvolutionNeuralNetworkBuilder setInputConverter(Function inputConverter) {
-        this.inputConverter = inputConverter;
+    public ConvolutionNeuralNetworkBuilder addListener(CnnTrainListener listen){
+        this.listeners = Optional.ofNullable(this.listeners).orElse(new ArrayList<>());
+        this.listeners.add(listen);
         return this;
     }
 
 
-    @Override
+    //@Override
     public ConvolutionNeuralNetwork build() {
 
         CnnLayer current = firstLayer;
@@ -49,7 +52,7 @@ public class ConvolutionNeuralNetworkBuilder extends NetworkBuilder<ConvolutionN
         ConvolutionNeuralNetwork network = new ConvolutionNeuralNetwork();
         network.inputLayer = firstLayer;
         network.outputLayer = latestLayer;
-        network.inputConverter = this.inputConverter;
+        network.listeners = Optional.ofNullable(this.listeners).orElse(Collections.emptyList());
         return network;
     }
 }
