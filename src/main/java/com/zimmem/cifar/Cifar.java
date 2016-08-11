@@ -23,7 +23,7 @@ public class Cifar {
             log.error("cifar-10 dataset not exist! please download at http://www.cs.toronto.edu/~kriz/cifar.html");
         }
 
-        File[] dataBatches = dir.listFiles((dir1, name) -> name.startsWith("data_batch_"));
+        File[] dataBatches = dir.listFiles((dir1, name) -> name.startsWith("data_batch_1"));
         List<CifarImage> images = loadImagesFormFile(dataBatches);
         return images;
     }

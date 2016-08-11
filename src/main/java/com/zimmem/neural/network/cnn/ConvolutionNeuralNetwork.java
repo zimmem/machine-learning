@@ -21,6 +21,8 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
 
     private static Logger log = LoggerFactory.getLogger(ConvolutionNeuralNetwork.class);
 
+    private static Logger blog = LoggerFactory.getLogger("b");
+
     private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     CnnLayer inputLayer;
@@ -51,8 +53,9 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                         synchronized (contexts) {
                             contexts.add(context);
                         }
+
                         List<Matrix> output = forward(context);
-                        listeners.stream().forEach(l -> l.onForwardFinish(context, output));
+                        listeners.forEach(l -> l.onForwardFinish(context, output));
 
                         List<Matrix> outputDeltas = IntStream.range(0, outputLayer.outputCount).mapToObj(i ->
                                 context.getExcepted().get(i).minus(output.get(i))
@@ -61,6 +64,29 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                         context.deltas.put(outputLayer, outputDeltas);
                         outputLayer.backPropagationDelta(context);
                         //System.out.println(context.deltas.get(inputLayer.nextLayer).get(0).getColumn());
+
+                        CnnLayer layer = inputLayer;
+                        blog.info(context.deltas.get(outputLayer.preLayer).toString());
+                        blog.info("#---------- {} ----------------", layer);
+                        while(layer != null){
+                            if(layer instanceof  CnnConvolutionLayer){
+                                blog.info("#=========== {} =================", layer);
+
+                                CnnConvolutionLayer convLayer = (CnnConvolutionLayer) layer;
+                                convLayer.filters.forEach(f -> {
+                                    blog.info(String.valueOf(f.bias));
+                                    f.kernels.forEach(k ->{
+                                        blog.info(k.toString());
+                                        blog.info("##-------------------");
+                                    });
+                                });
+                            }
+
+                            layer = layer.nextLayer;
+
+                        }
+                        blog.info("########################");
+
                         latch.countDown();
                     });
                 }
@@ -69,7 +95,7 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                outputLayer.backPropagationUpdate(contexts, .5d);
+                outputLayer.backPropagationUpdate(contexts, .85d);
                 listeners.forEach(l -> l.onBatchFinish(contexts));
 
             }

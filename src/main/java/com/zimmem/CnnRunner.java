@@ -36,7 +36,7 @@ public class CnnRunner {
                 .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
                 .addLayer(new CnnConvolutionLayer(5, 5, 12))
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid ))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
                 .addLayer(new CnnConvolutionLayer(4, 4, 10))
                 .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
@@ -54,7 +54,7 @@ public class CnnRunner {
                 return new CnnTrainInput(input, expected);
             }).collect(Collectors.toList());
 
-            network.train(inputs, 20, 10);
+            network.train(inputs,50, 10);
 
         } finally {
             network.shutdown();

@@ -56,6 +56,7 @@ public class Mnist {
 //        System.out.println(labels.size());
 //        images.forEach(i -> System.out.println(Arrays.toString(i.getValues())));
 
+         new File("D:\\code\\mnist-picture\\test\\").mkdirs();
         for(int i = 0 ; i < images.size() ;i ++ ){
             BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_BYTE_GRAY);
             for(int c = 0 ; c < 28 ; c++){
@@ -63,7 +64,7 @@ public class Mnist {
                     image.setRGB(r, c , images.get(i).getValues()[28 * c + r ]);
                 }
             }
-            new File("D:\\code\\mnist-picture\\test\\").mkdirs();
+
             ImageIO.write(image, "jpg", new File("D:\\code\\mnist-picture\\test\\" +  i + "_"+ labels.get(i).getValue()+".jpg"));
         }
 

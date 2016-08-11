@@ -5,6 +5,7 @@ import com.zimmem.math.Matrix;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 /**
@@ -118,8 +119,6 @@ public class CnnConvolutionLayer extends CnnLayer {
 
             List<Matrix> preDeltas = new ArrayList<>(preLayer.outputCount);
             for (int i = 0; i < preLayer.outputCount; i++) {
-                // 暂不考虑 正向 conv 时 step > 1 的情况
-                // 为什么转180度？
                 preDeltas.add(delta.conv(kernels.get(i).rotate180(), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
             }
             return preDeltas;
@@ -137,6 +136,9 @@ public class CnnConvolutionLayer extends CnnLayer {
                 }
                 return sum;
             }).sum() * eta / contexts.size();
+            if(Double.isNaN(this.bias )){
+                throw new RuntimeException();
+            }
             for (int j = 0; j < kernels.size(); j++) {
                 Matrix kernelDelta = Matrix.zeros(kernelRow, kernelColumn);
                 for (CnnTrainContext context : contexts) {

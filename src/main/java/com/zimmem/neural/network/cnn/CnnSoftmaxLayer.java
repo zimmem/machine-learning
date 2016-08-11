@@ -35,8 +35,16 @@ public class CnnSoftmaxLayer extends CnnLayer {
      */
     @Override
     protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
+        List<Matrix> excepted = context.getExcepted();
+        int label = maxLabel(excepted);
+        List<Matrix> features = context.features.get(this );
 
-        return context.deltas.get(this).stream().map(m -> m.processUnits(d -> -d)).collect(Collectors.toList());
+        return IntStream.range(0, excepted.size()).mapToObj(i -> features.get(i).processUnits(d -> {
+            double indicator = i == label ? 1.0 : 0.0;
+            return d - indicator;
+        })).collect(Collectors.toList());
+
+        //return context.deltas.get(this).stream().map(m -> m.processUnits(d -> -d)).collect(Collectors.toList());
         //return context.deltas.get(this);
     }
 
@@ -47,8 +55,7 @@ public class CnnSoftmaxLayer extends CnnLayer {
 
     private List<Double> softmax(List<Double> input) {
         double max = input.stream().mapToDouble(d -> d).max().getAsDouble();
-
-        List<Double> powers = input.stream().map(d -> Math.exp(max < 700 ? d : d - max + 700)).collect(Collectors.toList());
+        List<Double> powers = input.stream().map(d -> Math.exp(d - max)).collect(Collectors.toList());
         double sum = powers.stream().mapToDouble(d -> d).sum();
         return powers.stream().map(d -> d / sum).collect(Collectors.toList());
     }
@@ -56,11 +63,19 @@ public class CnnSoftmaxLayer extends CnnLayer {
     public static void main(String[] args) {
         System.out.println(Math.exp(3000));
         CnnSoftmaxLayer soft = new CnnSoftmaxLayer();
-        List<Double> result = soft.softmax(Arrays.asList(2500d, 2600d, 2700d, 2700d,2500d, 2600d, 2700d, 2701d,2500d, 2600d));
+        List<Double> result = soft.softmax(Arrays.asList(2500d, 2600d, 2700d, 2700d, 2500d, 2600d, 2700d, 2701d, 2500d, 2600d));
         System.out.println(result);
+    }
 
-
-        System.out.println(Math.log(Double.MAX_VALUE));
-        System.out.println(Math.exp(Double.MIN_VALUE));
+    private int maxLabel(List<Matrix> matrices) {
+        int label = 0;
+        double max = matrices.get(0).getValue(0, 0);
+        for (int i = 1; i < matrices.size(); i++) {
+            if (max < matrices.get(i).getValue(0, 0)) {
+                max = matrices.get(i).getValue(0, 0);
+                label = i;
+            }
+        }
+        return label;
     }
 }

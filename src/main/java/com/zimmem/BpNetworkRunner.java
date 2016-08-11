@@ -30,12 +30,13 @@ public class BpNetworkRunner {
     public static void main(String[] args) throws IOException, InterruptedException {
         BPNetwork network = NetworkBuilder.bp()
                 .addLayer(new Layer(28 * 28, null))
-                .addLayer(new Layer(200, Functions.Sigmoid))
-                //.addLayer(new Layer(50, Functions.Sigmoid))
+                .addLayer(new Layer(50, Functions.Sigmoid))
                 .addLayer(new Layer(10, Functions.Sigmoid))
                 .build();
 
-        network.train(Mnist.loadImages("/mnist/train-images.idx3-ubyte"), Mnist.loadLabels("/mnist/train-labels.idx1-ubyte"), 50, 10);
+        List<MnistImage> images = Mnist.loadImages("/mnist/train-images.idx3-ubyte");
+        List<MnistLabel> labels = Mnist.loadLabels("/mnist/train-labels.idx1-ubyte");
+        network.train(images, labels, 10, 30);
 
 //        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("model." + System.currentTimeMillis()));
 //        oos.writeObject(network);
@@ -54,7 +55,9 @@ public class BpNetworkRunner {
             MnistLabel label = testLabels.get(i);
             MnistImage image = testImages.get(i);
             executor.execute(() -> {
+
                 double[] output = network.forward(new TrainContext(), image);
+
                 double max = Arrays.stream(output).max().getAsDouble();
                 if (!Double.isNaN(output[label.getValue()]) && Objects.equals(max, output[label.getValue()])) {
                     collect.incrementAndGet();
