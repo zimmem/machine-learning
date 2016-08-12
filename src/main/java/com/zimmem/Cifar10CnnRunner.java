@@ -47,17 +47,15 @@ public class Cifar10CnnRunner {
 //        network.shutdown();
 
         try {
-            List<MnistImage> trainImages = Mnist.loadImages("/mnist/train-images.idx3-ubyte");
-            List<MnistLabel> trainLabels = Mnist.loadLabels("/mnist/train-labels.idx1-ubyte");
-            List<CnnTrainInput> inputs = IntStream.range(0, trainImages.size()).mapToObj(i -> {
-                MnistImage image = trainImages.get(i);
-                List<Matrix> input = Collections.singletonList(image.asMatrix());
-                int label = trainLabels.get(i).getValue();
+            List<CifarImage> cifarImages = Cifar.loadTrandImages();
+            List<CnnTrainInput> inputs = IntStream.range(0, cifarImages.size()).mapToObj(i -> {
+                CifarImage image = cifarImages.get(i);
+                int label = image.getLabel();
                 List<Matrix> expected = IntStream.range(0, 10).mapToObj(l -> Matrix.single(l == label ? 1d : 0d)).collect(Collectors.toList());
-                return new CnnTrainInput(input, expected);
+                return new CnnTrainInput(image.asMatrices(), expected);
             }).collect(Collectors.toList());
 
-            network.train(inputs.subList(0,1), 1, 10000);
+            network.train(inputs.subList(0,10000), 1, 10000);
 
         } finally {
             network.shutdown();
