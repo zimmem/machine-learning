@@ -30,9 +30,9 @@ public class CnnConvolutionLayer extends CnnLayer {
         this.outputCount = count;
     }
 
-    private final int kernelRow;
-    private final int kernelColumn;
-     List<ConvFilter> filters;
+     final int kernelRow;
+     final int kernelColumn;
+    List<ConvFilter> filters;
     private int pad;
     private int step;
 
@@ -90,7 +90,7 @@ public class CnnConvolutionLayer extends CnnLayer {
     }
 
 
-     class ConvFilter {
+    class ConvFilter {
         double bias;
         List<Matrix> kernels;
 
@@ -128,7 +128,7 @@ public class CnnConvolutionLayer extends CnnLayer {
 
         void update(List<CnnTrainContext> contexts, int index, double eta) {
             List<Matrix> deltas = contexts.stream().map(c -> c.deltas.get(CnnConvolutionLayer.this).get(index)).collect(Collectors.toList());
-            this.bias += deltas.stream().mapToDouble(dm -> {
+            this.bias -= deltas.stream().mapToDouble(dm -> {
                 double sum = 0;
                 for (int r = 0; r < dm.getRow(); r++) {
                     for (int c = 0; c < dm.getColumn(); c++) {
@@ -137,15 +137,24 @@ public class CnnConvolutionLayer extends CnnLayer {
                 }
                 return sum;
             }).sum() * eta / contexts.size();
+            //System.out.println(this.bias);
+            if(Double.isNaN(bias) || Double.isInfinite(bias)){
+                throw new RuntimeException();
+            }
             for (int j = 0; j < kernels.size(); j++) {
                 Matrix kernelDelta = Matrix.zeros(kernelRow, kernelColumn);
                 for (CnnTrainContext context : contexts) {
+                    //System.out.println("###############");
                     List<Matrix> preFeatures = context.features.get(preLayer);
+                    //System.out.println(preFeatures.get(j));
+                    //System.out.println("------ conv --------------");
+                    //System.out.println(context.deltas.get(CnnConvolutionLayer.this).get(index));
                     kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
+                    //System.out.println("###############");
                 }
+                //System.out.println(kernelDelta);
                 kernelDelta = kernelDelta.processUnits(d -> d * eta / contexts.size());
-
-                kernels.set(j, kernels.get(j).plus(kernelDelta));
+                kernels.set(j, kernels.get(j).minus(kernelDelta));
 
             }
 

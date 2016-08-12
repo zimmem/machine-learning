@@ -37,7 +37,7 @@ public class CnnSoftmaxLayer extends CnnLayer {
     protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
 
         return context.deltas.get(this).stream().map(m -> m.processUnits(d -> -d)).collect(Collectors.toList());
-        //return context.deltas.get(this);
+//        return context.deltas.get(this);
     }
 
     @Override

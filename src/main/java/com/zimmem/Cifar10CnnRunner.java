@@ -23,14 +23,14 @@ public class Cifar10CnnRunner {
 
     public static void main(String[] args) throws InterruptedException, IOException {
         ConvolutionNeuralNetwork network = NetworkBuilder.cnn()
-                .addLayer(new CnnInputLayer(28, 28, 1))
+                .addLayer(new CnnInputLayer(32, 32, 1))
                 .addLayer(new CnnConvolutionLayer(5, 5, 6)) // 28
                 .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 14
                 .addLayer(new CnnConvolutionLayer(5, 5, 16)) // 10
                 .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 5
-                .addLayer(new CnnConvolutionLayer(4, 4, 10))
+                .addLayer(new CnnConvolutionLayer(5, 5, 10))
                 .addLayer(new CnnSoftmaxLayer())
                 .addListener(new Stat2LogListener())
                 .build();

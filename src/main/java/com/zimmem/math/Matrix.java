@@ -54,6 +54,10 @@ public class Matrix {
         return values[row][column];
     }
 
+    public double[][] getValues() {
+        return values;
+    }
+
     /**
      * 旋转 180 度
      *
