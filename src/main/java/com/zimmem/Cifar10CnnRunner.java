@@ -23,12 +23,12 @@ public class Cifar10CnnRunner {
 
     public static void main(String[] args) throws InterruptedException, IOException {
         ConvolutionNeuralNetwork network = NetworkBuilder.cnn()
-                .addLayer(new CnnInputLayer(32, 32, 1))
+                .addLayer(new CnnInputLayer(32, 32,3))
                 .addLayer(new CnnConvolutionLayer(5, 5, 6)) // 28
-                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 14
-                .addLayer(new CnnConvolutionLayer(5, 5, 16)) // 10
-                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnConvolutionLayer(5, 5, 20)) // 10
+                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 5
                 .addLayer(new CnnConvolutionLayer(5, 5, 10))
                 .addLayer(new CnnSoftmaxLayer())
@@ -55,7 +55,7 @@ public class Cifar10CnnRunner {
                 return new CnnTrainInput(image.asMatrices(), expected);
             }).collect(Collectors.toList());
 
-            network.train(inputs.subList(0,10000), 1, 10000);
+            network.train(inputs.subList(0,10000), 20, 10000);
 
         } finally {
             network.shutdown();

@@ -59,7 +59,7 @@ public class CifarImage {
         Matrix m = new Matrix(32, 32);
         for (int c = 0; c < 32; c++) {
             for (int r = 0; r < 32; r++) {
-                m.setValue(r, c, values[32 * c + r] & 0xff);
+                m.setValue(r, c, (values[32 * c + r] & 0xff) / 255);
             }
         }
         return m;
