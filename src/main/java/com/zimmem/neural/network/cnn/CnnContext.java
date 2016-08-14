@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class CnnContext {
 
-    Map<CnnLayer, List<Matrix>> features = new HashMap<>();
+    public Map<CnnLayer, List<Matrix>> features = new HashMap<>();
 
     private List<Matrix> inputs ;
 

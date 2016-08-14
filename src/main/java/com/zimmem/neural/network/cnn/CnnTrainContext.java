@@ -13,7 +13,7 @@ public class CnnTrainContext extends  CnnContext {
     /**
      * 每层每个输出 map 的 delta
      */
-    Map<CnnLayer, List<Matrix>> deltas = new HashMap<>();
+    public Map<CnnLayer, List<Matrix>> deltas = new HashMap<>();
 
     private List<Matrix> excepted;
 

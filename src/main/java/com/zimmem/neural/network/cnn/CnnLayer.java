@@ -11,7 +11,7 @@ public abstract class CnnLayer {
 
     CnnLayer preLayer;
 
-    CnnLayer nextLayer;
+    public CnnLayer nextLayer;
 
     int outputCount;
 

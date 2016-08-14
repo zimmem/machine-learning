@@ -23,14 +23,14 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
 
     private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    CnnLayer inputLayer;
+    public CnnLayer inputLayer;
 
     CnnLayer outputLayer;
 
     public List<CnnTrainListener> listeners;
 
     //@Override
-    public void train(List<CnnTrainInput> inputs, int batchSize, int repeat) {
+    public void train(List<CnnTrainInput> inputs, int batchSize, int repeat, double eta) {
 
         long start = System.currentTimeMillis();
         log.info("begin to train at {}", start);
@@ -69,7 +69,7 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                outputLayer.backPropagationUpdate(contexts, .5);
+                outputLayer.backPropagationUpdate(contexts, eta);
                 listeners.forEach(l -> l.onBatchFinish(contexts));
 
             }

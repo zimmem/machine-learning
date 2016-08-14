@@ -48,6 +48,7 @@ public class MnistImage {
         for (int c = 0; c < 28; c++) {
             for (int r = 0; r < 28; r++) {
                 m.setValue(r, c, (values[28 * c + r] & 0xff) > 0 ? 1 : 0d);
+                //m.setValue(r, c, (values[28 * c + r] & 0xff));
             }
         }
         return  m;

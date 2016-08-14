@@ -4,14 +4,10 @@ import com.zimmem.cifar.Cifar;
 import com.zimmem.cifar.CifarImage;
 import com.zimmem.math.ActivationFunction;
 import com.zimmem.math.Matrix;
-import com.zimmem.mnist.Mnist;
-import com.zimmem.mnist.MnistImage;
-import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
 import com.zimmem.neural.network.cnn.*;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,18 +17,53 @@ import java.util.stream.IntStream;
  */
 public class Cifar10CnnRunner {
 
+    static ConvolutionNeuralNetwork network;
     public static void main(String[] args) throws InterruptedException, IOException {
-        ConvolutionNeuralNetwork network = NetworkBuilder.cnn()
+         network = NetworkBuilder.cnn()
                 .addLayer(new CnnInputLayer(32, 32,3))
-                .addLayer(new CnnConvolutionLayer(5, 5, 6)) // 28
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
+                .addLayer(new CnnConvolutionLayer(5, 5, 16)) // 28
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 14
-                .addLayer(new CnnConvolutionLayer(5, 5, 20)) // 10
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
+                .addLayer(new CnnConvolutionLayer(5, 5, 30)) // 10
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
                 .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max)) // 5
                 .addLayer(new CnnConvolutionLayer(5, 5, 10))
                 .addLayer(new CnnSoftmaxLayer())
                 .addListener(new Stat2LogListener())
+                .addListener(new Stat2LogListener() {
+                    @Override
+                    public void onForwardFinish(CnnTrainContext context, List<Matrix> output) {
+                        super.onForwardFinish(context, output);
+                    }
+
+                    @Override
+                    public void onBatchFinish(List<CnnTrainContext> contexts) {
+                        super.onBatchFinish(contexts);
+                        if (totalTrained.intValue() % 1000 == 0) {
+                            CnnLayer current = network.inputLayer;
+                            while (current != null) {
+                                System.out.println("==============");
+                                if (current instanceof CnnConvolutionLayer) {
+                                    CnnConvolutionLayer layer = (CnnConvolutionLayer) current;
+                                    layer.filters.forEach(f -> {
+                                        System.out.println(f.bias);
+                                    });
+                                }
+                                System.out.println("-------------------------");
+                                CnnTrainContext context = contexts.get(0);
+                                System.out.println(context.features.get(current));
+                                current = current.nextLayer;
+                            }
+
+
+                        }
+                    }
+
+                    @Override
+                    public void onEpochFinish(int epoch) {
+                        super.onEpochFinish(epoch);
+                    }
+                })
                 .build();
 
 //        List<CifarImage> cifarImages = Cifar.loadTrandImages();
@@ -55,7 +86,7 @@ public class Cifar10CnnRunner {
                 return new CnnTrainInput(image.asMatrices(), expected);
             }).collect(Collectors.toList());
 
-            network.train(inputs.subList(0,10000), 20, 10000);
+            network.train(inputs.subList(0,10000), 1, 5, 0.001);
 
         } finally {
             network.shutdown();

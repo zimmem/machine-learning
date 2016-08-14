@@ -2,15 +2,20 @@ package com.zimmem.neural.network.cnn;
 
 import com.alibaba.fastjson.JSON;
 import com.zimmem.Stat2LogListener;
+import com.zimmem.math.ActivationFunction;
 import com.zimmem.math.Matrix;
+import com.zimmem.mnist.Mnist;
+import com.zimmem.mnist.MnistImage;
+import com.zimmem.mnist.MnistLabel;
 import com.zimmem.neural.network.NetworkBuilder;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
  * Created by zimmem on 2016/8/12.
@@ -19,11 +24,16 @@ public class SoftmaxTest {
     static ConvolutionNeuralNetwork network = null;
     static Logger log = LoggerFactory.getLogger("b");
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         network = NetworkBuilder.cnn()
-                .addLayer(new CnnInputLayer(6, 6, 1))
-                .addLayer(new CnnPoolingLayer(3, 3, CnnPoolingLayer.Strategy.Max))
-                .addLayer(new CnnConvolutionLayer(2, 2, 3))
+                .addLayer(new CnnInputLayer(28, 28, 1))
+                .addLayer(new CnnConvolutionLayer(5, 5, 1))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
+                .addLayer(new CnnConvolutionLayer(5, 5, 1))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
+                .addLayer(new CnnConvolutionLayer(4, 4, 10))
                 .addLayer(new CnnSoftmaxLayer())
                 .addListener(new Stat2LogListener())
                 .addListener(new CnnTrainListener() {
@@ -63,18 +73,40 @@ public class SoftmaxTest {
                 .build();
 
         CnnLayer current = SoftmaxTest.network.inputLayer;
+        int i = 0;
+        log.info("var filters = []");
         while (current != null) {
             if(current instanceof  CnnConvolutionLayer){
-                printKernel((CnnConvolutionLayer) current, "before");
+                log.info("var before_filter = {}");
+                printKernel((CnnConvolutionLayer) current, "before_filter.");
+                log.info("filters.push(before_filter)");
             }
             current = current.nextLayer;
         }
 
-        Matrix inputValue = Matrix.random(6, 6, -1, 1);
-        log.info("var input = {}", JSON.toJSONString(matrix2list(Arrays.asList(inputValue))));
-        List<Matrix> expected = Stream.of(0, 0, 1).map(Matrix::single).collect(Collectors.toList());
-        CnnTrainInput input = new CnnTrainInput(Arrays.asList(inputValue), expected);
-        network.train(Arrays.asList(input), 1, 1);
+        List<MnistImage> trainImages = Mnist.loadImages("/mnist/train-images.idx3-ubyte");
+        List<MnistLabel> trainLabels = Mnist.loadLabels("/mnist/train-labels.idx1-ubyte");
+        Matrix inputValue = trainImages.get(0).asMatrix();
+        log.info("var input = {}", JSON.toJSONString(matrix2list(Collections.singletonList(inputValue))));
+        log.info("var expected  = {}",trainLabels.get(0).getValue()  );
+        List<Matrix> expected = IntStream.range(0,10).mapToObj(a -> a == trainLabels.get(0).getValue() ? Matrix.single(1) : Matrix.single(0)).collect(Collectors.toList());
+        CnnTrainInput input = new CnnTrainInput(Collections.singletonList(inputValue), expected);
+        network.train(Collections.singletonList(input), 1, 1, 0.85);
+
+        CnnContext context = new CnnContext();
+        context.setInputs(Collections.singletonList(inputValue));
+        System.out.println(network.forward(context));
+
+        current = network.inputLayer;
+        while(current !=null ){
+            System.out.println("========"+current+"========");
+            List<Matrix> matrices = context.features.get(current);
+            matrices.stream().forEach(m ->{
+                System.out.println(m);
+                System.out.println("----------------");
+            });
+            current = current.nextLayer;
+        }
 
         network.shutdown();
         LogManager.shutdown();
@@ -84,11 +116,15 @@ public class SoftmaxTest {
 
     private static List<Double> matrix2list(List<Matrix> matrices) {
         List<Double> w = new ArrayList<>();
-        matrices.forEach(k -> {
-            Arrays.stream(k.getValues()).forEach(a -> {
-                Arrays.stream(a).forEach(w::add);
+        Matrix first = matrices.get(0);
+        IntStream.range(0,first.getRow()).forEach(r -> {
+            IntStream.range(0,first.getColumn()).forEach(c -> {
+                matrices.forEach(k -> {
+                    w.add(k.getValue(r,c));
+                });
             });
         });
+
         return w;
     }
 

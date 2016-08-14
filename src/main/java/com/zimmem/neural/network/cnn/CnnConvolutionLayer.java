@@ -32,7 +32,7 @@ public class CnnConvolutionLayer extends CnnLayer {
 
      final int kernelRow;
      final int kernelColumn;
-    List<ConvFilter> filters;
+    public List<ConvFilter> filters;
     private int pad;
     private int step;
 
@@ -90,15 +90,15 @@ public class CnnConvolutionLayer extends CnnLayer {
     }
 
 
-    class ConvFilter {
-        double bias;
+    public class ConvFilter {
+        public double bias;
         List<Matrix> kernels;
 
 
         ConvFilter(int kernelRow, int kernelColumn, int kernelCount) {
             kernels = new ArrayList<>(kernelCount);
             for (int i = 0; i < kernelCount; i++) {
-                kernels.add(Matrix.random(kernelRow, kernelColumn, 0.0d, 0.05d));
+                kernels.add(Matrix.random(kernelRow, kernelColumn, -0.05d, 0.05d));
             }
         }
 
@@ -109,7 +109,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             for (int i = 1; i < sources.size(); i++) {
                 result = result.plus(sources.get(i).conv(kernels.get(i), 0, 1));
             }
-
+            result = result.processUnits(d -> d + bias);
             return result;
         }
 

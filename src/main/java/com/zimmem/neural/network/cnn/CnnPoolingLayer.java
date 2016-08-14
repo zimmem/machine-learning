@@ -129,10 +129,10 @@ public class CnnPoolingLayer extends CnnLayer {
                                     maxColumn = tc;
                                 }
                                 //TODO 批量训练时直接 Kronecker 到上层
-                                result.setValue(tr, tc, source.getValue(r, c ));
+                                //result.setValue(tr, tc, source.getValue(r, c ));
                             }
                         }
-                        //result.setValue(maxRow, maxColumn, source.getValue(r, c ));
+                        result.setValue(maxRow, maxColumn, source.getValue(r, c ));
 
                     }
                 }
