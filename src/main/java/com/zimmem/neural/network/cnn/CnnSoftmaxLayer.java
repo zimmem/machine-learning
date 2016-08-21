@@ -5,11 +5,12 @@ import com.zimmem.math.Matrix;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by zimmem on 2016/8/8.
  */
-public class CnnSoftmaxLayer extends  CnnLayer {
+public class CnnSoftmaxLayer extends CnnLayer {
 
     @Override
     void init() {
@@ -26,9 +27,17 @@ public class CnnSoftmaxLayer extends  CnnLayer {
         context.features.put(this, features);
     }
 
+    /**
+     * https://hit-scir.gitbooks.io/neural-networks-and-deep-learning-zh_cn/content/chap3/c3s4.html
+     *
+     * @param context
+     * @return
+     */
     @Override
     protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
-        return null;
+
+//        return context.deltas.get(this).stream().map(m -> m.processUnits(d -> -d)).collect(Collectors.toList());
+        return context.deltas.get(this);
     }
 
     @Override
@@ -36,15 +45,22 @@ public class CnnSoftmaxLayer extends  CnnLayer {
 
     }
 
-    private List<Double> softmax(List<Double> input){
-        List<Double> powers = input.stream().map(d -> Math.pow(Math.E, d)).collect(Collectors.toList());
+    private List<Double> softmax(List<Double> input) {
+        double max = input.stream().mapToDouble(d -> d).max().getAsDouble();
+
+        List<Double> powers = input.stream().map(d -> Math.exp(max < 700 ? d : d - max + 700)).collect(Collectors.toList());
         double sum = powers.stream().mapToDouble(d -> d).sum();
         return powers.stream().map(d -> d / sum).collect(Collectors.toList());
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+        System.out.println(Math.exp(3000));
         CnnSoftmaxLayer soft = new CnnSoftmaxLayer();
-        List<Double> result = soft.softmax(Arrays.asList(1d, 2d, 3d, 10d));
+        List<Double> result = soft.softmax(Arrays.asList(2500d, 2600d, 2700d, 2700d,2500d, 2600d, 2700d, 2701d,2500d, 2600d));
         System.out.println(result);
+
+
+        System.out.println(Math.log(Double.MAX_VALUE));
+        System.out.println(Math.exp(Double.MIN_VALUE));
     }
 }

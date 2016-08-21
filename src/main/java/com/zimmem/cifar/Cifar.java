@@ -24,8 +24,7 @@ public class Cifar {
         }
 
         File[] dataBatches = dir.listFiles((dir1, name) -> name.startsWith("data_batch_"));
-        List<CifarImage> images = loadImagesFormFile(dataBatches);
-        return images;
+        return loadImagesFormFile(dataBatches);
     }
 
     public static  List<CifarImage> loadTestImages() {

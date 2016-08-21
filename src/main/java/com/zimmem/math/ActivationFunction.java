@@ -14,7 +14,7 @@ public interface ActivationFunction {
     ActivationFunction Sigmoid = new ActivationFunction() {
         @Override
         public double run(double x) {
-            return 1 / (1 + Math.pow(Math.E, -x));
+            return 1 / (1 + Math.exp(-x));
         }
 
         @Override
@@ -36,7 +36,10 @@ public interface ActivationFunction {
     };
 
     public static void main(String[] args){
-        System.out.println(Sigmoid.runDerivative(Double.parseDouble("-8.148001762954165E-5")));
+        System.out.println(Sigmoid.runDerivative(-8.148001762954165E-5));
+
+        System.out.println(Functions.SigmoidDerivative.apply(-8.148001762954165E-5));
     }
+
 
 }

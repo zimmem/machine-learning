@@ -37,14 +37,14 @@ public class CnnActivationLayer extends CnnLayer {
     @Override
     protected List<Matrix> calculatePreDelta(CnnTrainContext context) {
         return IntStream.range(0, outputCount).mapToObj(i -> {
-            Matrix predelta = context.deltas.get(this).get(i);
-            Matrix result = Matrix.zeros(predelta.getRow(), predelta.getColumn());
-            for (int r = 0; r < predelta.getRow(); r++) {
-                for (int c = 0; c < predelta.getColumn(); c++) {
-                    result.setValue(r, c, predelta.getValue(r, c) * activationFunction.runDerivative(context.features.get(preLayer).get(i).getValue(r, c)));
+            Matrix delta = context.deltas.get(this).get(i);
+            Matrix preDelta = Matrix.zeros(delta.getRow(), delta.getColumn());
+            for (int r = 0; r < delta.getRow(); r++) {
+                for (int c = 0; c < delta.getColumn(); c++) {
+                    preDelta.setValue(r, c, delta.getValue(r, c) * activationFunction.runDerivative(context.features.get(preLayer).get(i).getValue(r, c)));
                 }
             }
-            return result;
+            return preDelta;
         }).collect(Collectors.toList());
     }
 

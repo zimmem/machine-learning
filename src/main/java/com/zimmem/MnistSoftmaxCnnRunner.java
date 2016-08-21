@@ -23,23 +23,25 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Created by Zimmem on 2016/7/30.
+ * Created by zimmem on 2016/8/12.
  */
-public class CnnRunner {
+public class MnistSoftmaxCnnRunner {
+    private static Logger log = LoggerFactory.getLogger(MnistSoftmaxCnnRunner.class);
 
-    private static Logger log = LoggerFactory.getLogger(CnnRunner.class);
+
+    static ConvolutionNeuralNetwork network = null;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ConvolutionNeuralNetwork network = NetworkBuilder.cnn()
+        network = NetworkBuilder.cnn()
                 .addLayer(new CnnInputLayer(28, 28, 1))
                 .addLayer(new CnnConvolutionLayer(5, 5, 6))
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
-                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
                 .addLayer(new CnnConvolutionLayer(5, 5, 20))
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
-                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Means))
+                .addLayer(new CnnActivationLayer(ActivationFunction.Relu))
+                .addLayer(new CnnPoolingLayer(2, 2, CnnPoolingLayer.Strategy.Max))
                 .addLayer(new CnnConvolutionLayer(4, 4, 10))
-                .addLayer(new CnnActivationLayer(ActivationFunction.Sigmoid))
+                .addLayer(new CnnSoftmaxLayer())
                 .addListener(new Stat2LogListener())
                 .build();
 
@@ -54,7 +56,7 @@ public class CnnRunner {
                 return new CnnTrainInput(input, expected);
             }).collect(Collectors.toList());
 
-            network.train(inputs, 50, 10, 0.85);
+            network.train(inputs, 10, 10, 0.01);
 
         } finally {
             network.shutdown();
@@ -111,8 +113,8 @@ public class CnnRunner {
         log.info("test finish {}/{} = {}", collect, testImages.size(), (double) collect.get() / testImages.size());
         executor.shutdown();
 
+
     }
 
 
 }
-

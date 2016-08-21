@@ -23,14 +23,14 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
 
     private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    CnnLayer inputLayer;
+    public CnnLayer inputLayer;
 
     CnnLayer outputLayer;
 
     public List<CnnTrainListener> listeners;
 
     //@Override
-    public void train(List<CnnTrainInput> inputs, int batchSize, int repeat) {
+    public void train(List<CnnTrainInput> inputs, int batchSize, int repeat, double eta) {
 
         long start = System.currentTimeMillis();
         log.info("begin to train at {}", start);
@@ -52,12 +52,12 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                             contexts.add(context);
                         }
                         List<Matrix> output = forward(context);
+                        listeners.forEach(l -> l.onForwardFinish(context, output));
 
-                        listeners.stream().forEach(l -> l.onForwardFinish(context, output));
                         List<Matrix> outputDeltas = IntStream.range(0, outputLayer.outputCount).mapToObj(i ->
-                                context.getExcepted().get(i).minus(output.get(i))
+                                //context.getExcepted().get(i).minus(output.get(i))
+                                output.get(i).minus( context.getExcepted().get(i))
                         ).collect(Collectors.toList());
-
 
                         context.deltas.put(outputLayer, outputDeltas);
                         outputLayer.backPropagationDelta(context);
@@ -70,7 +70,7 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                outputLayer.backPropagationUpdate(contexts, .5d);
+                outputLayer.backPropagationUpdate(contexts, eta);
                 listeners.forEach(l -> l.onBatchFinish(contexts));
 
             }

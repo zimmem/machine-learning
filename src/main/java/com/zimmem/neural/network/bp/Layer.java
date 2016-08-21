@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
  * <p>
  * Created by zimmem on 2016/7/26.
  */
-public class Layer implements Serializable{
+public class Layer implements Serializable {
 
     int size;
 
@@ -70,7 +70,7 @@ public class Layer implements Serializable{
             weights = new double[size][preLayer.size];
             for (int i = 0; i < size; i++) {
                 for (int j = 0; j < preLayer.size; j++) {
-                    weights[i][j] = ( random.nextDouble() - .5) * 0.1;
+                    weights[i][j] = (random.nextDouble() - .5) * 0.1;
                 }
             }
         }
@@ -125,13 +125,12 @@ public class Layer implements Serializable{
     }
 
     /**
-     *
      * @param contexts
-     * @param eta 学习速率
+     * @param eta      学习速率
      */
     void backPropagationUpdate(List<TrainContext> contexts, double eta) {
 
-        if (preLayer == null ) {
+        if (preLayer == null) {
             return;
         }
 

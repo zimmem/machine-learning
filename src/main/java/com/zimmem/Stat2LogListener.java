@@ -11,13 +11,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Stat2LogListener implements CnnTrainListener {
 
-    private static Logger log = LoggerFactory.getLogger(Stat2LogListener.class);
+    protected static Logger log = LoggerFactory.getLogger(Stat2LogListener.class);
 
-    private AtomicInteger batchCollect = new AtomicInteger(0);
-    private AtomicInteger totalCollect = new AtomicInteger(0);
-    private AtomicInteger batchTrained = new AtomicInteger(0);
-    private AtomicInteger totalTrained = new AtomicInteger(0);
-    private AtomicInteger batch = new AtomicInteger(0);
+    protected AtomicInteger batchCollect = new AtomicInteger(0);
+    protected AtomicInteger totalCollect = new AtomicInteger(0);
+    protected AtomicInteger batchTrained = new AtomicInteger(0);
+    protected AtomicInteger totalTrained = new AtomicInteger(0);
+    protected AtomicInteger batch = new AtomicInteger(0);
 
     @Override
     public void onForwardFinish(CnnTrainContext context, List<Matrix> output) {
@@ -33,7 +33,7 @@ public class Stat2LogListener implements CnnTrainListener {
     @Override
     public void onBatchFinish(List<CnnTrainContext> contexts) {
         batch.incrementAndGet();
-        log.info("batch {} : {}/{} - total {}/{} = {}",batch, batchCollect, batchTrained, totalCollect, totalTrained, totalCollect.doubleValue() / totalTrained.doubleValue());
+        log.debug("batch {} : {}/{} - total {}/{} = {}",batch, batchCollect, batchTrained, totalCollect, totalTrained, totalCollect.doubleValue() / totalTrained.doubleValue());
         batchCollect.set(0);
         batchTrained.set(0);
     }
@@ -46,7 +46,7 @@ public class Stat2LogListener implements CnnTrainListener {
         batch.set(0);
     }
 
-    private int maxLabel(List<Matrix> matrices) {
+    protected int maxLabel(List<Matrix> matrices) {
         int label = 0;
         double max = matrices.get(0).getValue(0, 0);
         for (int i = 1; i < matrices.size(); i++) {

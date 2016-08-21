@@ -43,6 +43,16 @@ public class Matrix {
         return matrix;
     }
 
+    public static Matrix from(double[][] values) {
+        int row = values.length;
+        int column = values[0].length;
+        Matrix matrix = new Matrix(row, column);
+        for (int r = 0; r < row; r++) {
+            System.arraycopy(values[r], 0, matrix.values[r], 0, column);
+        }
+        return matrix;
+    }
+
     public static Matrix single(double value){
         Matrix matrix = new Matrix(1, 1);
         matrix.values[0][0] = value;
@@ -52,6 +62,10 @@ public class Matrix {
 
     public double getValue(int row, int column) {
         return values[row][column];
+    }
+
+    public double[][] getValues() {
+        return values;
     }
 
     /**

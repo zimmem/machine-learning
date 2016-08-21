@@ -77,7 +77,7 @@ public class BPNetwork implements Network, Serializable {
                         expect[image.getLabel()] = 1;
                         double[] error = new double[output.length];
                         for (int i = 0; i < output.length; i++) {
-                            error[i] = output[i] - expect[i];
+                            error[i] = output[i] -expect[i] ;
                         }
 
                         // 计算 output 层偏差

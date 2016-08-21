@@ -8,7 +8,7 @@
     </appender>
 
     <appender name="z-file" class="org.apache.log4j.FileAppender">
-        <param name="File" value="target/b.txt"/>
+        <param name="File" value="target/z.txt"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%m%n"/>
         </layout>
@@ -32,7 +32,7 @@
 
 
     <root>
-        <level value="debug"/>
+        <level value="info"/>
         <appender-ref ref="console"/>
     </root>
 </log4j:configuration>
