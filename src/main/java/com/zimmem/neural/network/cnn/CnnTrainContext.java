@@ -2,6 +2,7 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Map;
 /**
  * Created by zimmem on 2016/8/8.
  */
-public class CnnTrainContext extends  CnnContext {
+public class CnnTrainContext extends  CnnContext  implements Serializable {
     /**
      * 每层每个输出 map 的 delta
      */

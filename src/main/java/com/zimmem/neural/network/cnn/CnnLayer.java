@@ -2,12 +2,13 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by Zimmem on 2016/7/30.
  */
-public abstract class CnnLayer {
+public abstract class CnnLayer implements Serializable {
 
     CnnLayer preLayer;
 

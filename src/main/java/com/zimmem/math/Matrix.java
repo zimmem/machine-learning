@@ -1,5 +1,6 @@
 package com.zimmem.math;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.function.DoubleFunction;
@@ -7,7 +8,7 @@ import java.util.function.DoubleFunction;
 /**
  * Created by zimmem on 2016/7/26.
  */
-public class Matrix {
+public class Matrix implements Serializable {
 
     public double[][] values;
 
@@ -128,7 +129,9 @@ public class Matrix {
 
     public Matrix conv(Matrix kernel, int pad, int step) {
 
+
         int targetRows = (this.row + pad * 2 - kernel.row) / step + 1;
+
         int targetColumns = (this.column + pad * 2 - kernel.column) / step + 1;
 
         Matrix result = new Matrix(targetRows, targetColumns);

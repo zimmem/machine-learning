@@ -33,8 +33,7 @@ public class Cifar {
             log.error("cifar-10 dataset not exist! please download at http://www.cs.toronto.edu/~kriz/cifar.html");
         }
 
-        List<CifarImage> images = loadImagesFormFile(new File[]{file});
-        return images;
+        return loadImagesFormFile(new File[]{file});
     }
 
 
@@ -78,9 +77,12 @@ public class Cifar {
     }
 
     public static void main(String[] args){
-        System.out.println(loadTrandImages().size());
-        System.out.println(loadTestImages().size());
-
+        //System.out.println(loadTrandImages().size());
+        List<CifarImage> testImage = loadTestImages();
+        System.out.println(testImage.size());
+        for (CifarImage cifarImage : testImage) {
+            System.out.println(cifarImage.getLabel());
+        }
     }
 
 }

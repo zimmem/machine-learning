@@ -4,6 +4,7 @@ import com.zimmem.math.Matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,11 +18,9 @@ import java.util.stream.IntStream;
 /**
  * Created by Zimmem on 2016/7/30.
  */
-public class ConvolutionNeuralNetwork /*implements Network*/ {
+public class ConvolutionNeuralNetwork implements Serializable/*implements Network*/ {
 
     private static Logger log = LoggerFactory.getLogger(ConvolutionNeuralNetwork.class);
-
-    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public CnnLayer inputLayer;
 
@@ -31,7 +30,7 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
 
     //@Override
     public void train(List<CnnTrainInput> inputs, int batchSize, int repeat, double eta) {
-
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         long start = System.currentTimeMillis();
         log.info("begin to train at {}", start);
 
@@ -78,6 +77,12 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
             //present(epoch);
             //log.info("epoch {}:  {} / {} ", epoch, correct, trainContexts.size());
         });
+        executor.shutdown();
+        try {
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -89,8 +94,7 @@ public class ConvolutionNeuralNetwork /*implements Network*/ {
     }
 
     public void shutdown() throws InterruptedException {
-        executor.shutdown();
-        executor.awaitTermination(10, TimeUnit.SECONDS);
+
     }
 
 

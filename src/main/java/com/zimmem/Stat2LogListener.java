@@ -6,10 +6,11 @@ import com.zimmem.neural.network.cnn.CnnTrainListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Stat2LogListener implements CnnTrainListener {
+public class Stat2LogListener implements CnnTrainListener, Serializable {
 
     protected static Logger log = LoggerFactory.getLogger(Stat2LogListener.class);
 
@@ -33,7 +34,7 @@ public class Stat2LogListener implements CnnTrainListener {
     @Override
     public void onBatchFinish(List<CnnTrainContext> contexts) {
         batch.incrementAndGet();
-        log.debug("batch {} : {}/{} - total {}/{} = {}",batch, batchCollect, batchTrained, totalCollect, totalTrained, totalCollect.doubleValue() / totalTrained.doubleValue());
+        log.info("batch {} : {}/{} - total {}/{} = {}",batch, batchCollect, batchTrained, totalCollect, totalTrained, totalCollect.doubleValue() / totalTrained.doubleValue());
         batchCollect.set(0);
         batchTrained.set(0);
     }

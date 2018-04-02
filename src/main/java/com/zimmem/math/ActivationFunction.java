@@ -1,11 +1,12 @@
 package com.zimmem.math;
 
+import java.io.Serializable;
 import java.util.logging.XMLFormatter;
 
 /**
  * Created by zimmem on 2016/8/4.
  */
-public interface ActivationFunction {
+public interface ActivationFunction extends Serializable {
 
     double run(double value);
 

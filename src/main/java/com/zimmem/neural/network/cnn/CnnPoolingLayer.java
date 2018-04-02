@@ -2,6 +2,7 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -10,7 +11,7 @@ import java.util.stream.IntStream;
 /**
  * Created by Zimmem on 2016/7/30.
  */
-public class CnnPoolingLayer extends CnnLayer {
+public class CnnPoolingLayer extends CnnLayer  implements Serializable {
 
 
     private int filterRow;
@@ -70,7 +71,7 @@ public class CnnPoolingLayer extends CnnLayer {
     }
 
 
-    public static abstract class Strategy {
+    public static abstract class Strategy implements Serializable{
 
         public abstract Matrix pooling(Matrix source, int poolRow, int poolColumn);
 

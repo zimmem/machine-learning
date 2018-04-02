@@ -2,6 +2,7 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ public class CnnConvolutionLayer extends CnnLayer {
         this(kernelRow, kernelColumn, 0, 1, count);
     }
 
-    CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count) {
+    public CnnConvolutionLayer(int kernelRow, int kernelColumn, int pad, int step, int count) {
         this.kernelRow = kernelRow;
         this.kernelColumn = kernelColumn;
         this.pad = pad;
@@ -84,13 +85,12 @@ public class CnnConvolutionLayer extends CnnLayer {
     protected void updateWeightsAndBias(List<CnnTrainContext> contexts, double eta) {
         IntStream.range(0, filters.size()).forEach(fi -> {
             ConvFilter filter = filters.get(fi);
-
             filter.update(contexts, fi, eta);
         });
     }
 
 
-    public class ConvFilter {
+    public class ConvFilter implements Serializable {
         public double bias;
         List<Matrix> kernels;
 
@@ -104,10 +104,10 @@ public class CnnConvolutionLayer extends CnnLayer {
 
         Matrix filter(List<Matrix> sources) {
 
-            Matrix result = sources.get(0).conv(kernels.get(0), 0, 1);
+            Matrix result = Matrix.zeros(outputRow, outputColumn);
 
-            for (int i = 1; i < sources.size(); i++) {
-                result = result.plus(sources.get(i).conv(kernels.get(i), 0, 1));
+            for (int i = 0; i < sources.size(); i++) {
+                result = result.plus(sources.get(i).conv(kernels.get(i), pad, 1));
             }
             result = result.processUnits(d -> d + bias);
             return result;
@@ -120,7 +120,7 @@ public class CnnConvolutionLayer extends CnnLayer {
             for (int i = 0; i < preLayer.outputCount; i++) {
                 // 暂不考虑 正向 conv 时 step > 1 的情况
                 // 为什么转180度？
-                preDeltas.add(delta.conv(kernels.get(i).rotate180(), (preLayer.outputRow + kernels.get(i).getRow() - 1 - delta.getRow()) / 2, 1));
+                    preDeltas.add(delta.conv(kernels.get(i).rotate180(), kernelRow - pad - 1 , 1));
             }
             return preDeltas;
 
@@ -149,7 +149,7 @@ public class CnnConvolutionLayer extends CnnLayer {
                     //System.out.println(preFeatures.get(j));
                     //System.out.println("------ conv --------------");
                     //System.out.println(context.deltas.get(CnnConvolutionLayer.this).get(index));
-                    kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), 0, 1));
+                    kernelDelta = kernelDelta.plus(preFeatures.get(j).conv(context.deltas.get(CnnConvolutionLayer.this).get(index), pad, 1));
                     //System.out.println("###############");
                 }
                 //System.out.println(kernelDelta);

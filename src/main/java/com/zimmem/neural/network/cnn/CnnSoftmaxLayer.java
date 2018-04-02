@@ -2,6 +2,7 @@ package com.zimmem.neural.network.cnn;
 
 import com.zimmem.math.Matrix;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +11,7 @@ import java.util.stream.IntStream;
 /**
  * Created by zimmem on 2016/8/8.
  */
-public class CnnSoftmaxLayer extends CnnLayer {
+public class CnnSoftmaxLayer extends CnnLayer  implements Serializable {
 
     @Override
     void init() {
@@ -56,7 +57,7 @@ public class CnnSoftmaxLayer extends CnnLayer {
     public static void main(String[] args) {
         System.out.println(Math.exp(3000));
         CnnSoftmaxLayer soft = new CnnSoftmaxLayer();
-        List<Double> result = soft.softmax(Arrays.asList(2500d, 2600d, 2700d, 2700d,2500d, 2600d, 2700d, 2701d,2500d, 2600d));
+        List<Double> result = soft.softmax(Arrays.asList(1d,2d,3d,4d));
         System.out.println(result);
 
 

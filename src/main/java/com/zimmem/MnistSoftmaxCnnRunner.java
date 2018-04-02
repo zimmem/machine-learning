@@ -1,5 +1,6 @@
 package com.zimmem;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import com.zimmem.math.ActivationFunction;
 import com.zimmem.math.Matrix;
 import com.zimmem.mnist.Mnist;
@@ -11,8 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -44,6 +44,17 @@ public class MnistSoftmaxCnnRunner {
                 .addLayer(new CnnSoftmaxLayer())
                 .addListener(new Stat2LogListener())
                 .build();
+        ByteOutputStream bos = new ByteOutputStream();
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(bos)){
+            oos.writeObject(network);
+            oos.flush();
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bos.getBytes()))){
+            network = (ConvolutionNeuralNetwork) ois.readObject();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         try {
             List<MnistImage> trainImages = Mnist.loadImages("/mnist/train-images.idx3-ubyte");
